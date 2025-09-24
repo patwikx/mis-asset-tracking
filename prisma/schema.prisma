@@ -1,0 +1,386 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or "mysql", "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Business Units / Companies
+model BusinessUnit {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  departments    Department[]
+  employees      Employee[]
+  assets         Asset[]
+  deployments    AssetDeployment[]
+  assetHistories AssetHistory[]
+
+  @@map("business_units")
+}
+
+// Departments (Dynamic)
+model Department {
+  id             String   @id @default(uuid())
+  name           String
+  code           String
+  description    String?
+  businessUnitId String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  businessUnit   BusinessUnit   @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  employees      Employee[]
+  assetHistories AssetHistory[]
+
+  @@unique([code, businessUnitId])
+  @@map("departments")
+}
+
+// Roles (Dynamic)
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  permissions Json? // Store role permissions as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  employees Employee[]
+
+  @@map("roles")
+}
+
+// Employees/Users (Combined model for next-auth)
+model Employee {
+  id             String    @id @default(uuid())
+  employeeId     String    @unique // Company employee ID
+  email          String?   @unique
+  passwordHash   String // Hashed password for next-auth credentials
+  firstName      String
+  lastName       String
+  middleName     String?
+  position       String?
+  businessUnitId String
+  departmentId   String
+  roleId         String
+  isActive       Boolean   @default(true)
+  hireDate       DateTime?
+  terminateDate  DateTime?
+
+  // Next-auth related fields
+  emailVerified DateTime?
+  image         String?
+  lastLoginAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  // Asset relations
+  deployments         AssetDeployment[] @relation("DeployedToEmployee")
+  accountingApprovals AssetDeployment[] @relation("AccountingApprover")
+  createdAssets       Asset[]           @relation("AssetCreator")
+  assetHistories      AssetHistory[]    @relation("HistoryEmployee")
+
+  // Auth sessions
+  sessions Session[]
+  accounts Account[]
+
+  @@map("employees")
+}
+
+// Asset Categories
+model AssetCategory {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assets Asset[]
+
+  @@map("asset_categories")
+}
+
+// Asset Status
+enum AssetStatus {
+  AVAILABLE
+  DEPLOYED
+  IN_MAINTENANCE
+  RETIRED
+  LOST
+  DAMAGED
+}
+
+// Asset History Actions
+enum AssetHistoryAction {
+  CREATED
+  DEPLOYED
+  RETURNED
+  TRANSFERRED
+  STATUS_CHANGED
+  MAINTENANCE_START
+  MAINTENANCE_END
+  RETIRED
+  LOST
+  DAMAGED
+  REPAIRED
+  LOCATION_CHANGED
+  UPDATED
+}
+
+// Main Assets Table
+model Asset {
+  id             String      @id @default(uuid())
+  itemCode       String      @unique // Your internal item code
+  description    String
+  serialNumber   String?     @unique
+  modelNumber    String?
+  brand          String?
+  specifications Json? // Store technical specs as JSON
+  purchaseDate   DateTime?
+  purchasePrice  Decimal?    @db.Decimal(10, 2)
+  warrantyExpiry DateTime?
+  categoryId     String
+  businessUnitId String
+  quantity       Int         @default(1)
+  status         AssetStatus @default(AVAILABLE)
+  location       String? // Physical location
+  notes          String?
+  createdById    String
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Current assignment info (denormalized for quick access)
+  currentlyAssignedTo String? // Current employee ID if deployed
+  currentDeploymentId String? // Current deployment ID if deployed
+  lastAssignedDate    DateTime? // When it was last assigned
+
+  // Relations
+  category           AssetCategory      @relation(fields: [categoryId], references: [id])
+  businessUnit       BusinessUnit       @relation(fields: [businessUnitId], references: [id])
+  createdBy          Employee           @relation("AssetCreator", fields: [createdById], references: [id])
+  deployments        AssetDeployment[]
+  assetHistories     AssetHistory[]
+  maintenanceRecords AssetMaintenance[]
+
+  @@map("assets")
+}
+
+// Asset Deployment Status
+enum DeploymentStatus {
+  PENDING_ACCOUNTING_APPROVAL
+  APPROVED
+  DEPLOYED
+  RETURNED
+  CANCELLED
+}
+
+// Asset Deployments (Tracking who has what and when)
+model AssetDeployment {
+  id                 String           @id @default(uuid())
+  assetId            String
+  employeeId         String // Who the asset is deployed to
+  businessUnitId     String
+  deployedDate       DateTime? // When it was actually deployed
+  expectedReturnDate DateTime?
+  returnedDate       DateTime?
+  status             DeploymentStatus @default(PENDING_ACCOUNTING_APPROVAL)
+  deploymentNotes    String?
+  returnNotes        String?
+
+  // Accounting approval fields
+  accountingApproverId String? // Who from accounting approved
+  accountingApprovedAt DateTime? // When accounting approved
+  accountingNotes      String? // Accounting notes/comments
+
+  // Condition tracking
+  deploymentCondition String? // Condition when deployed
+  returnCondition     String? // Condition when returned
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  asset              Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee           Employee     @relation("DeployedToEmployee", fields: [employeeId], references: [id])
+  businessUnit       BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  accountingApprover Employee?    @relation("AccountingApprover", fields: [accountingApproverId], references: [id])
+
+  @@map("asset_deployments")
+}
+
+// Asset History - Complete tracking of all asset changes and assignments
+model AssetHistory {
+  id      String             @id @default(uuid())
+  assetId String
+  action  AssetHistoryAction
+
+  // Employee/Assignment related fields
+  employeeId     String? // Employee involved in this history entry
+  departmentId   String? // Department at time of action
+  businessUnitId String? // Business unit at time of action
+
+  // Deployment related fields
+  deploymentId String? // Related deployment if applicable
+
+  // Asset state tracking
+  previousStatus   AssetStatus? // Status before this action
+  newStatus        AssetStatus? // Status after this action
+  previousLocation String? // Location before this action
+  newLocation      String? // Location after this action
+
+  // Additional context
+  notes    String? // Additional notes about this history entry
+  metadata Json? // Additional metadata as JSON (conditions, specifications changes, etc.)
+
+  // Tracking fields
+  performedById String? // Who performed this action (could be system)
+  performedAt   DateTime @default(now())
+
+  // Duration tracking (useful for deployment periods)
+  startDate DateTime? // When this state/assignment started
+  endDate   DateTime? // When this state/assignment ended
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  asset        Asset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee     Employee?     @relation("HistoryEmployee", fields: [employeeId], references: [id])
+  department   Department?   @relation(fields: [departmentId], references: [id])
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id])
+
+  @@index([assetId, performedAt]) // For efficient asset history queries
+  @@index([employeeId, performedAt]) // For efficient employee history queries
+  @@index([action, performedAt]) // For efficient action-based queries
+  @@map("asset_histories")
+}
+
+// Asset Maintenance Records
+model AssetMaintenance {
+  id              String    @id @default(uuid())
+  assetId         String
+  maintenanceType String // PREVENTIVE, CORRECTIVE, EMERGENCY
+  description     String
+  scheduledDate   DateTime?
+  startDate       DateTime?
+  completedDate   DateTime?
+  performedBy     String? // Technician or company
+  cost            Decimal?  @db.Decimal(10, 2)
+  notes           String?
+  isCompleted     Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_maintenance")
+}
+
+// Audit Trail for all changes
+model AuditLog {
+  id        String   @id @default(uuid())
+  tableName String // Which table was affected
+  recordId  String // ID of the affected record
+  action    String // CREATE, UPDATE, DELETE
+  oldValues Json? // Previous values (for updates)
+  newValues Json? // New values
+  userId    String // Who made the change
+  timestamp DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+
+  @@map("audit_logs")
+}
+
+// Next-auth required models
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user Employee @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         Employee @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// System Settings
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  category    String? // Group settings by category
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Notifications for pending approvals, returns, etc.
+model Notification {
+  id          String   @id @default(uuid())
+  recipientId String
+  title       String
+  message     String
+  type        String // APPROVAL_PENDING, RETURN_DUE, etc.
+  relatedId   String? // ID of related record (deployment, asset, etc.)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("notifications")
+}
