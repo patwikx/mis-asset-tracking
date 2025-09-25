@@ -38,6 +38,7 @@ export const EmployeeFiltersComponent: React.FC<EmployeeFiltersComponentProps> =
 
   useEffect(() => {
     loadFilterOptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessUnitId]);
 
   const loadFilterOptions = async () => {

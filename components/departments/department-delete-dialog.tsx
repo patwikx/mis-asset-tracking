@@ -51,7 +51,7 @@ export const DepartmentDeleteDialog: React.FC<DepartmentDeleteDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Department</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete department "{department?.name}" ({department?.code})?
+            Are you sure you want to delete department &quot;{department?.name}&quot; ({department?.code})?
             This action cannot be undone and will deactivate the department record.
           </AlertDialogDescription>
         </AlertDialogHeader>

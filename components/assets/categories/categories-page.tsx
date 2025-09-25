@@ -70,9 +70,8 @@ export const CategoriesPage: React.FC = () => {
   };
 
   const handleView = (category: AssetCategoryWithCounts) => {
-    // TODO: Implement category detail view
-    console.log('View category:', category);
-    toast.info('Category detail view coming soon');
+    // Categories don't have detail pages - show category info in a modal or expand inline
+    toast.info('Category details: ' + category.name + ' (' + category._count.assets + ' assets)');
   };
 
   const handleEdit = (category: AssetCategoryWithCounts) => {
@@ -184,11 +183,62 @@ export const CategoriesPage: React.FC = () => {
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
           asset={{
-            ...selectedCategory,
+            id: selectedCategory.id,
             description: `Category: ${selectedCategory.name}`,
             itemCode: selectedCategory.code,
-            deployments: []
-          } as any}
+            serialNumber: null,
+            modelNumber: null,
+            brand: null,
+            specifications: null,
+            purchaseDate: null,
+            purchasePrice: null,
+            warrantyExpiry: null,
+            categoryId: selectedCategory.id,
+            businessUnitId: '',
+            quantity: 1,
+            status: 'AVAILABLE' as const,
+            location: null,
+            notes: null,
+            createdById: '',
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            currentlyAssignedTo: null,
+            currentDeploymentId: null,
+            lastAssignedDate: null,
+            deployments: [],
+            category: selectedCategory,
+            businessUnit: {
+              id: '',
+              name: '',
+              code: '',
+              description: null,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            createdBy: {
+              id: '',
+              employeeId: '',
+              email: null,
+              passwordHash: '',
+              firstName: 'System',
+              lastName: 'User',
+              middleName: null,
+              position: null,
+              businessUnitId: '',
+              departmentId: '',
+              roleId: '',
+              isActive: true,
+              hireDate: null,
+              terminateDate: null,
+              emailVerified: null,
+              image: null,
+              lastLoginAt: null,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          }}
           onSuccess={handleDeleteSuccess}
         />
       )}

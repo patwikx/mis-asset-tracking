@@ -4,6 +4,8 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/current-user';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
+import { serializeForClient } from '@/lib/utils/server-client-bridge';
 import type {
   AssetCategoryWithCounts,
   CreateAssetCategoryData,
@@ -11,6 +13,19 @@ import type {
   PaginationParams,
   PaginatedResponse
 } from '@/types/asset-types';
+
+// Type for audit log data
+type AuditLogData = {
+  userId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  tableName: string;
+  recordId: string;
+  oldValues?: Prisma.InputJsonValue;
+  newValues?: Prisma.InputJsonValue;
+  timestamp: Date;
+  ipAddress?: string;
+  userAgent?: string;
+};
 
 export async function getAssetCategories(
   search?: string,
@@ -20,15 +35,16 @@ export async function getAssetCategories(
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
 
-    const where = {
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { code: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } }
-        ]
-      })
-    };
+    // Build where clause with proper typing
+    const where: Prisma.AssetCategoryWhereInput = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    }
 
     const [categories, total] = await Promise.all([
       prisma.assetCategory.findMany({
@@ -49,7 +65,7 @@ export async function getAssetCategories(
       prisma.assetCategory.count({ where })
     ]);
 
-    return {
+    return serializeForClient({
       data: categories,
       pagination: {
         page,
@@ -57,7 +73,7 @@ export async function getAssetCategories(
         total,
         totalPages: Math.ceil(total / limit)
       }
-    };
+    });
   } catch (error) {
     console.error('Error fetching asset categories:', error);
     throw new Error('Failed to fetch asset categories');
@@ -79,14 +95,16 @@ export async function getAssetCategoryById(id: string): Promise<AssetCategoryWit
       }
     });
 
-    return category;
+    return category ? serializeForClient(category) : null;
   } catch (error) {
     console.error('Error fetching asset category:', error);
     throw new Error('Failed to fetch asset category');
   }
 }
 
-export async function createAssetCategory(data: CreateAssetCategoryData): Promise<{ success: boolean; message: string; categoryId?: string }> {
+export async function createAssetCategory(
+  data: CreateAssetCategoryData
+): Promise<{ success: boolean; message: string; categoryId?: string }> {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -107,20 +125,33 @@ export async function createAssetCategory(data: CreateAssetCategoryData): Promis
       return { success: false, message: 'Category with this code or name already exists' };
     }
 
+    // Prepare category data with proper types
+    const categoryData: Prisma.AssetCategoryCreateInput = {
+      name: data.name,
+      code: data.code,
+      description: data.description,
+    };
+
     const category = await prisma.assetCategory.create({
-      data
+      data: categoryData
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'CREATE',
+      tableName: 'AssetCategory',
+      recordId: category.id,
+      newValues: {
+        name: data.name,
+        code: data.code,
+        description: data.description,
+      } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'CREATE',
-        tableName: 'AssetCategory',
-        recordId: category.id,
-        newValues: data as any,
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets/categories');
@@ -131,7 +162,9 @@ export async function createAssetCategory(data: CreateAssetCategoryData): Promis
   }
 }
 
-export async function updateAssetCategory(data: UpdateAssetCategoryData): Promise<{ success: boolean; message: string }> {
+export async function updateAssetCategory(
+  data: UpdateAssetCategoryData
+): Promise<{ success: boolean; message: string }> {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -140,14 +173,30 @@ export async function updateAssetCategory(data: UpdateAssetCategoryData): Promis
 
     const { id, ...updateData } = data;
 
+    // Get current category for audit trail
+    const currentCategory = await prisma.assetCategory.findUnique({
+      where: { id }
+    });
+
+    if (!currentCategory) {
+      return { success: false, message: 'Category not found' };
+    }
+
     // Check if code or name already exists (if being updated)
     if (updateData.code || updateData.name) {
+      const whereConditions: Prisma.AssetCategoryWhereInput[] = [];
+      
+      if (updateData.code) {
+        whereConditions.push({ code: updateData.code });
+      }
+      
+      if (updateData.name) {
+        whereConditions.push({ name: updateData.name });
+      }
+
       const existingCategory = await prisma.assetCategory.findFirst({
         where: { 
-          OR: [
-            ...(updateData.code ? [{ code: updateData.code }] : []),
-            ...(updateData.name ? [{ name: updateData.name }] : [])
-          ],
+          OR: whereConditions,
           id: { not: id }
         }
       });
@@ -157,21 +206,37 @@ export async function updateAssetCategory(data: UpdateAssetCategoryData): Promis
       }
     }
 
+    // Prepare update data with proper types
+    const categoryUpdateData: Prisma.AssetCategoryUpdateInput = {
+      ...updateData,
+      updatedAt: new Date()
+    };
+
     await prisma.assetCategory.update({
       where: { id },
-      data: updateData
+      data: categoryUpdateData
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'UPDATE',
+      tableName: 'AssetCategory',
+      recordId: id,
+      oldValues: {
+        name: currentCategory.name,
+        code: currentCategory.code,
+        description: currentCategory.description,
+        isActive: currentCategory.isActive
+      } as Prisma.InputJsonValue,
+      newValues: {
+        ...updateData
+      } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'UPDATE',
-        tableName: 'AssetCategory',
-        recordId: id,
-        newValues: updateData as any,
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets/categories');
@@ -202,20 +267,39 @@ export async function deleteAssetCategory(id: string): Promise<{ success: boolea
       return { success: false, message: 'Cannot delete category with existing assets' };
     }
 
+    // Get current category for audit trail
+    const currentCategory = await prisma.assetCategory.findUnique({
+      where: { id }
+    });
+
+    if (!currentCategory) {
+      return { success: false, message: 'Category not found' };
+    }
+
     await prisma.assetCategory.delete({
       where: { id }
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'DELETE',
+      tableName: 'AssetCategory',
+      recordId: id,
+      oldValues: {
+        name: currentCategory.name,
+        code: currentCategory.code,
+        description: currentCategory.description,
+        isActive: currentCategory.isActive
+      } as Prisma.InputJsonValue,
+      newValues: { 
+        deleted: true 
+      } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'DELETE',
-        tableName: 'AssetCategory',
-        recordId: id,
-        newValues: { deleted: true },
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets/categories');

@@ -96,6 +96,7 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
     if (open) {
       loadFormData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, asset]);
 
   const loadFormData = async () => {

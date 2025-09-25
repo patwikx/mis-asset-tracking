@@ -10,21 +10,12 @@ export const metadata: Metadata = {
   description: 'Manage your organization\'s departments and divisions',
 };
 
-interface DepartmentsPageProps {
-  params: Promise<{
-    businessUnitId: string;
-  }>;
-}
-
-export default async function Departments({ params }: DepartmentsPageProps) {
+export default async function Departments() {
   const session = await auth();
   
   if (!session?.user) {
     redirect('/auth/sign-in');
   }
-
-  // Await params before using its properties
-  const { businessUnitId } = await params;
 
   return <DepartmentsPage />;
 }

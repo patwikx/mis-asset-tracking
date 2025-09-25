@@ -1,222 +1,153 @@
 // components/deployments/deployments-page.tsx
-'use client'
+'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { AssetsHeader } from '../assets/assets-header';
-import { DeploymentsTable } from './deployments-table';
-import { DeploymentFormDialog } from './deployment-form-dialog';
-import { DeploymentFiltersComponent } from './deployment-filters';
-import { AssetPagination } from '../assets/asset-pagination';
-import { toast } from "sonner";
-import { DeploymentStatus } from '@prisma/client';
-import type { 
-  AssetDeploymentWithRelations,
-  DeploymentFilters, 
-  PaginationParams,
-  PaginatedResponse 
-} from '@/types/asset-types';
-import { 
-  getDeployments,
-  updateDeployment
-} from '@/lib/actions/deployment-actions';
-import { useBusinessUnit } from '@/context/business-unit-context';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Search, Filter } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { getDeployments } from '@/lib/actions/deployment-actions';
+import type { AssetDeploymentWithRelations, DeploymentFilters } from '@/types/asset-types';
 
-export const DeploymentsPage: React.FC = () => {
-  const { businessUnitId } = useBusinessUnit();
+interface DeploymentsPageProps {
+  businessUnitId: string;
+}
+
+export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
+  const router = useRouter();
   const [deployments, setDeployments] = useState<AssetDeploymentWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedDeployment, setSelectedDeployment] = useState<AssetDeploymentWithRelations | null>(null);
-  
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<DeploymentFilters>({});
-  const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
-  const [paginationInfo, setPaginationInfo] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0
-  });
-
-  const loadDeployments = useCallback(async () => {
-    if (!businessUnitId) return;
-    
-    setIsLoading(true);
-    try {
-      const result: PaginatedResponse<AssetDeploymentWithRelations> = await getDeployments(businessUnitId, filters, pagination);
-      setDeployments(result.data);
-      setPaginationInfo(result.pagination);
-    } catch (error) {
-      console.error('Error loading deployments:', error);
-      toast.error('Failed to load deployments');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters, pagination]);
 
   useEffect(() => {
     loadDeployments();
-  }, [loadDeployments]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessUnitId, filters]);
 
-  const handleCreateNew = () => {
-    setSelectedDeployment(null);
-    setShowCreateDialog(true);
-  };
-
-  const handleView = (deployment: AssetDeploymentWithRelations) => {
-    // TODO: Implement deployment detail view
-    console.log('View deployment:', deployment);
-    toast.info('Deployment detail view coming soon');
-  };
-
-  const handleEdit = (deployment: AssetDeploymentWithRelations) => {
-    setSelectedDeployment(deployment);
-    setShowEditDialog(true);
-  };
-
-  const handleApprove = async (deployment: AssetDeploymentWithRelations) => {
+  const loadDeployments = async () => {
     try {
-      const result = await updateDeployment({
-        id: deployment.id,
-        status: DeploymentStatus.APPROVED,
-        accountingNotes: 'Approved via deployment management interface'
-      });
-
-      if (result.success) {
-        toast.success('Deployment approved successfully');
-        loadDeployments();
-      } else {
-        toast.error(result.message);
-      }
+      setLoading(true);
+      const result = await getDeployments(businessUnitId, filters);
+      setDeployments(result.data);
     } catch (error) {
-      console.error('Error approving deployment:', error);
-      toast.error('Failed to approve deployment');
+      console.error('Error loading deployments:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReject = async (deployment: AssetDeploymentWithRelations) => {
-    try {
-      const result = await updateDeployment({
-        id: deployment.id,
-        status: DeploymentStatus.CANCELLED,
-        accountingNotes: 'Rejected via deployment management interface'
-      });
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setFilters(prev => ({ ...prev, search: value }));
+  };
 
-      if (result.success) {
-        toast.success('Deployment rejected successfully');
-        loadDeployments();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error rejecting deployment:', error);
-      toast.error('Failed to reject deployment');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING_ACCOUNTING_APPROVAL':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'APPROVED':
+        return 'bg-blue-100 text-blue-800';
+      case 'DEPLOYED':
+        return 'bg-green-100 text-green-800';
+      case 'RETURNED':
+        return 'bg-gray-100 text-gray-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleReturn = async (deployment: AssetDeploymentWithRelations) => {
-    try {
-      const result = await updateDeployment({
-        id: deployment.id,
-        status: DeploymentStatus.RETURNED,
-        returnedDate: new Date(),
-        returnCondition: 'Good condition',
-        returnNotes: 'Returned via deployment management interface'
-      });
-
-      if (result.success) {
-        toast.success('Asset returned successfully');
-        loadDeployments();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error returning asset:', error);
-      toast.error('Failed to return asset');
-    }
-  };
-
-  const handleRefresh = () => {
-    loadDeployments();
-  };
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    toast.info('Export functionality coming soon');
-  };
-
-  const handleFiltersChange = (newFilters: DeploymentFilters) => {
-    setFilters(newFilters);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when filters change
-  };
-
-  const handleClearFilters = () => {
-    setFilters({});
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
-  };
-
-  const handleLimitChange = (limit: number) => {
-    setPagination({ page: 1, limit });
-  };
-
-  const handleFormSuccess = () => {
-    loadDeployments();
+  const handleDeploymentClick = (deploymentId: string) => {
+    router.push(`/${businessUnitId}/deployments/${deploymentId}`);
   };
 
   return (
     <div className="space-y-6">
-      <AssetsHeader
-        title="Asset Deployments"
-        description="Manage asset deployments and assignments"
-        onCreateNew={handleCreateNew}
-        onRefresh={handleRefresh}
-        onExport={handleExport}
-        showFilterButton={false} // Filter is handled by the DeploymentFiltersComponent
-      />
-
-      <div className="flex items-center space-x-4">
-        <DeploymentFiltersComponent
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-        />
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Deployments</h1>
+          <p className="text-muted-foreground">Manage asset deployments and assignments</p>
+        </div>
+        <Button onClick={() => router.push(`/${businessUnitId}/assets/deployments/create`)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Deployment
+        </Button>
       </div>
 
-      <DeploymentsTable
-        deployments={deployments}
-        onView={handleView}
-        onEdit={handleEdit}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onReturn={handleReturn}
-        isLoading={isLoading}
-      />
-
-      {!isLoading && deployments.length > 0 && (
-        <AssetPagination
-          pagination={paginationInfo}
-          onPageChange={handlePageChange}
-          onLimitChange={handleLimitChange}
-        />
-      )}
-
-      <DeploymentFormDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        deployment={null}
-        onSuccess={handleFormSuccess}
-      />
-
-      <DeploymentFormDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        deployment={selectedDeployment}
-        onSuccess={handleFormSuccess}
-      />
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>All Deployments</CardTitle>
+            <div className="flex space-x-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search deployments..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">Loading deployments...</div>
+          ) : deployments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No deployments found
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {deployments.map((deployment) => (
+                <div
+                  key={deployment.id}
+                  className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => handleDeploymentClick(deployment.id)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium">
+                          {deployment.asset.itemCode} - {deployment.asset.description}
+                        </h3>
+                        <Badge className={getStatusColor(deployment.status)}>
+                          {deployment.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <p>Employee: {deployment.employee.firstName} {deployment.employee.lastName}</p>
+                        <p>Category: {deployment.asset.category.name}</p>
+                        {deployment.deployedDate && (
+                          <p>Deployed: {new Date(deployment.deployedDate).toLocaleDateString()}</p>
+                        )}
+                        {deployment.expectedReturnDate && (
+                          <p>Expected Return: {new Date(deployment.expectedReturnDate).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <p>Created: {new Date(deployment.createdAt).toLocaleDateString()}</p>
+                      {deployment.returnedDate && (
+                        <p>Returned: {new Date(deployment.returnedDate).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}

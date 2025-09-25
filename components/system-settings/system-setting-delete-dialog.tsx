@@ -51,7 +51,7 @@ export const SystemSettingDeleteDialog: React.FC<SystemSettingDeleteDialogProps>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete System Setting</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete system setting "{setting?.key}"?
+            Are you sure you want to delete system setting &quot;{setting?.key}&quot;?
             This action cannot be undone and will deactivate the setting record.
           </AlertDialogDescription>
         </AlertDialogHeader>

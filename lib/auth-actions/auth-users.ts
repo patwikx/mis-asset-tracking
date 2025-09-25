@@ -13,7 +13,12 @@ type EmployeeWhereCondition = Prisma.EmployeeWhereInput;
 export const getUserByUsername = async (employeeId: string) => {
   try {
     const employee = await prisma.employee.findUnique({ 
-      where: { employeeId } 
+      where: { employeeId },
+      include: {
+        businessUnit: true,
+        department: true,
+        role: true,
+      }
     });
     return employee;
   } catch {

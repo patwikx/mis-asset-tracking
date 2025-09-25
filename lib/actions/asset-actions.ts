@@ -3,7 +3,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/current-user';
-import { AssetStatus, DeploymentStatus } from '@prisma/client';
+import { AssetStatus, DeploymentStatus, Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { serializeForClient } from '@/lib/utils/server-client-bridge';
 import type {
@@ -14,6 +14,19 @@ import type {
   PaginationParams,
   PaginatedResponse
 } from '@/types/asset-types';
+
+// Type for audit log data
+type AuditLogData = {
+  userId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  tableName: string;
+  recordId: string;
+  oldValues?: Prisma.InputJsonValue;
+  newValues?: Prisma.InputJsonValue;
+  timestamp: Date;
+  ipAddress?: string;
+  userAgent?: string;
+};
 
 export async function getAssets(
   businessUnitId: string,
@@ -30,31 +43,42 @@ export async function getAssets(
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
 
-    const where = {
+    // Build the where clause with proper typing
+    const baseWhere: Prisma.AssetWhereInput = {
       isActive: true,
       businessUnitId,
-      ...(categoryId && { categoryId }),
-      ...(status && { status }),
-      ...(minPrice !== undefined && { purchasePrice: { gte: minPrice } }),
-      ...(maxPrice !== undefined && { 
-        purchasePrice: { 
-          ...(minPrice !== undefined ? { gte: minPrice } : {}),
-          lte: maxPrice 
-        } 
-      }),
-      ...(search && {
-        OR: [
-          { itemCode: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } },
-          { serialNumber: { contains: search, mode: 'insensitive' as const } },
-          { brand: { contains: search, mode: 'insensitive' as const } }
-        ]
-      })
     };
+
+    if (categoryId) {
+      baseWhere.categoryId = categoryId;
+    }
+
+    if (status) {
+      baseWhere.status = status;
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      baseWhere.purchasePrice = {};
+      if (minPrice !== undefined) {
+        baseWhere.purchasePrice.gte = new Prisma.Decimal(minPrice);
+      }
+      if (maxPrice !== undefined) {
+        baseWhere.purchasePrice.lte = new Prisma.Decimal(maxPrice);
+      }
+    }
+
+    if (search) {
+      baseWhere.OR = [
+        { itemCode: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { serialNumber: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } }
+      ];
+    }
 
     const [assets, total] = await Promise.all([
       prisma.asset.findMany({
-        where,
+        where: baseWhere,
         include: {
           category: true,
           businessUnit: true,
@@ -68,7 +92,7 @@ export async function getAssets(
         skip,
         take: limit
       }),
-      prisma.asset.count({ where })
+      prisma.asset.count({ where: baseWhere })
     ]);
 
     return serializeForClient({
@@ -142,24 +166,66 @@ export async function createAsset(data: CreateAssetData): Promise<{ success: boo
       return { success: false, message: 'Asset with this item code already exists' };
     }
 
-    const asset = await prisma.asset.create({
-      data: {
-        ...data,
-        specifications: data.specifications as any,
-        createdById: user.id
+    // Prepare asset data with proper types
+    const assetData: Prisma.AssetCreateInput = {
+      itemCode: data.itemCode,
+      description: data.description,
+      serialNumber: data.serialNumber,
+      modelNumber: data.modelNumber,
+      brand: data.brand,
+      specifications: data.specifications 
+        ? data.specifications as Prisma.InputJsonValue 
+        : Prisma.JsonNull,
+      purchaseDate: data.purchaseDate,
+      purchasePrice: data.purchasePrice ? new Prisma.Decimal(data.purchasePrice) : null,
+      warrantyExpiry: data.warrantyExpiry,
+      quantity: data.quantity,
+      status: data.status || AssetStatus.AVAILABLE,
+      location: data.location,
+      notes: data.notes,
+      category: {
+        connect: { id: data.categoryId }
+      },
+      businessUnit: {
+        connect: { id: data.businessUnitId }
+      },
+      createdBy: {
+        connect: { id: user.id }
       }
+    };
+
+    const asset = await prisma.asset.create({
+      data: assetData
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'CREATE',
+      tableName: 'Asset',
+      recordId: asset.id,
+      newValues: {
+        itemCode: data.itemCode,
+        description: data.description,
+        serialNumber: data.serialNumber,
+        modelNumber: data.modelNumber,
+        brand: data.brand,
+        specifications: data.specifications,
+        purchaseDate: data.purchaseDate?.toISOString(),
+        purchasePrice: data.purchasePrice,
+        warrantyExpiry: data.warrantyExpiry?.toISOString(),
+        categoryId: data.categoryId,
+        businessUnitId: data.businessUnitId,
+        quantity: data.quantity,
+        status: data.status,
+        location: data.location,
+        notes: data.notes
+      } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'CREATE',
-        tableName: 'Asset',
-        recordId: asset.id,
-        newValues: data as any,
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets');
@@ -203,26 +269,60 @@ export async function updateAsset(data: UpdateAssetData): Promise<{ success: boo
       }
     }
 
+    // Prepare update data with proper types
+    const assetUpdateData: Prisma.AssetUpdateInput = {
+      ...updateData,
+      specifications: updateData.specifications !== undefined
+        ? (updateData.specifications 
+          ? updateData.specifications as Prisma.InputJsonValue 
+          : Prisma.JsonNull)
+        : undefined,
+      purchasePrice: updateData.purchasePrice 
+        ? new Prisma.Decimal(updateData.purchasePrice) 
+        : undefined,
+      updatedAt: new Date()
+    };
+
     await prisma.asset.update({
       where: { id },
-      data: {
-        ...updateData,
-        specifications: updateData.specifications as any,
-        updatedAt: new Date()
-      }
+      data: assetUpdateData
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'UPDATE',
+      tableName: 'Asset',
+      recordId: id,
+      oldValues: {
+        itemCode: currentAsset.itemCode,
+        description: currentAsset.description,
+        serialNumber: currentAsset.serialNumber,
+        modelNumber: currentAsset.modelNumber,
+        brand: currentAsset.brand,
+        specifications: currentAsset.specifications,
+        purchaseDate: currentAsset.purchaseDate?.toISOString(),
+        purchasePrice: currentAsset.purchasePrice?.toNumber(),
+        warrantyExpiry: currentAsset.warrantyExpiry?.toISOString(),
+        categoryId: currentAsset.categoryId,
+        businessUnitId: currentAsset.businessUnitId,
+        quantity: currentAsset.quantity,
+        status: currentAsset.status,
+        location: currentAsset.location,
+        notes: currentAsset.notes
+      } as Prisma.InputJsonValue,
+      newValues: {
+        ...updateData,
+        specifications: updateData.specifications,
+        purchaseDate: updateData.purchaseDate?.toISOString(),
+        purchasePrice: updateData.purchasePrice,
+        warrantyExpiry: updateData.warrantyExpiry?.toISOString()
+      } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'UPDATE',
-        tableName: 'Asset',
-        recordId: id,
-        oldValues: currentAsset as any,
-        newValues: updateData as any,
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets');
@@ -263,16 +363,18 @@ export async function deleteAsset(id: string): Promise<{ success: boolean; messa
       }
     });
 
-    // Create audit log
+    // Create audit log with proper typing
+    const auditData: AuditLogData = {
+      userId: user.id,
+      action: 'DELETE',
+      tableName: 'Asset',
+      recordId: id,
+      newValues: { isActive: false } as Prisma.InputJsonValue,
+      timestamp: new Date()
+    };
+
     await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'DELETE',
-        tableName: 'Asset',
-        recordId: id,
-        newValues: { isActive: false },
-        timestamp: new Date()
-      }
+      data: auditData
     });
 
     revalidatePath('/assets');
@@ -298,7 +400,7 @@ export async function getAssetCategories() {
       orderBy: { name: 'asc' }
     });
 
-    return categories;
+    return serializeForClient(categories);
   } catch (error) {
     console.error('Error fetching asset categories:', error);
     throw new Error('Failed to fetch asset categories');
@@ -311,13 +413,13 @@ export async function getBusinessUnits() {
       orderBy: { name: 'asc' }
     });
 
-    return businessUnits;
+    return serializeForClient(businessUnits);
   } catch (error) {
     console.error('Error fetching business units:', error);
     throw new Error('Failed to fetch business units');
   }
 }
 
-export async function getAssetStatuses() {
+export async function getAssetStatuses(): Promise<AssetStatus[]> {
   return Object.values(AssetStatus);
 }

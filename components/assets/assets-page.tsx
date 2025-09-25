@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { AssetsHeader } from './assets-header';
 import { AssetsTable } from './assets-table';
 import { AssetFormDialog } from './asset-form-dialog';
@@ -20,6 +21,7 @@ import { useBusinessUnit } from '@/context/business-unit-context';
 
 export const AssetsPage: React.FC = () => {
   const { businessUnitId } = useBusinessUnit();
+  const router = useRouter();
   const [assets, setAssets] = useState<AssetWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -62,9 +64,7 @@ export const AssetsPage: React.FC = () => {
   };
 
   const handleView = (asset: AssetWithRelations) => {
-    // TODO: Implement asset detail view
-    console.log('View asset:', asset);
-    toast.info('Asset detail view coming soon');
+    router.push(`/${businessUnitId}/assets/${asset.id}`);
   };
 
   const handleEdit = (asset: AssetWithRelations) => {

@@ -51,7 +51,7 @@ export const RoleDeleteDialog: React.FC<RoleDeleteDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Role</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete role "{role?.name}" ({role?.code})?
+            Are you sure you want to delete role &quot;{role?.name}&quot; ({role?.code})?
             This action cannot be undone and will deactivate the role record.
           </AlertDialogDescription>
         </AlertDialogHeader>

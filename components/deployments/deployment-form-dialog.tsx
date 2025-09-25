@@ -101,6 +101,7 @@ export const DeploymentFormDialog: React.FC<DeploymentFormDialogProps> = ({
     if (open) {
       loadFormData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, deployment]);
 
   const loadFormData = async () => {

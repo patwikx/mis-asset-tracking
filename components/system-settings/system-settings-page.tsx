@@ -16,6 +16,8 @@ import type {
   PaginatedResponse 
 } from '@/types/system-settings-types';
 import { getSystemSettings } from '@/lib/actions/system-settings-actions';
+import { useRouter } from 'next/navigation';
+import { useBusinessUnit } from '@/context/business-unit-context';
 
 export const SystemSettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<SystemSettingWithRelations[]>([]);
@@ -24,6 +26,8 @@ export const SystemSettingsPage: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedSetting, setSelectedSetting] = useState<SystemSettingWithRelations | null>(null);
+  const router = useRouter();
+  const { businessUnitId } = useBusinessUnit();
   
   const [filters, setFilters] = useState<SystemSettingFilters>({});
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
@@ -57,10 +61,9 @@ export const SystemSettingsPage: React.FC = () => {
     setShowCreateDialog(true);
   };
 
-  const handleView = (setting: SystemSettingWithRelations) => {
-    console.log('View setting:', setting);
-    toast.info('Setting detail view coming soon');
-  };
+    const handleView = (setting: SystemSettingWithRelations) => {
+      router.push(`/${businessUnitId}/system-settings/${setting.id}`);
+    };
 
   const handleEdit = (setting: SystemSettingWithRelations) => {
     setSelectedSetting(setting);

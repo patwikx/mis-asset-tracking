@@ -75,7 +75,7 @@ export const RoleFiltersComponent: React.FC<RoleFiltersComponentProps> = ({
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all-statuses">All statuses</SelectItem>
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
                   </SelectContent>

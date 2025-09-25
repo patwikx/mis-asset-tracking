@@ -60,7 +60,7 @@ export const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Employee</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete employee "{employee?.firstName} {employee?.lastName}" ({employee?.employeeId})?
+            Are you sure you want to delete employee &quot;{employee?.firstName} {employee?.lastName}&quot; ({employee?.employeeId})?
             This action cannot be undone and will deactivate the employee record.
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -20,5 +20,5 @@ export default async function Deployments({ params }: DeploymentsPageProps) {
   // Await params before using its properties
   const { businessUnitId } = await params;
 
-  return <DeploymentsPage />;
+  return <DeploymentsPage businessUnitId={businessUnitId} />;
 }

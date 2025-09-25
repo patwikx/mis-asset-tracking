@@ -261,7 +261,7 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Price:</span>
                         <span className="text-sm font-medium">
-                          ${asset.purchasePrice.toLocaleString()}
+                          ₱{asset.purchasePrice.toLocaleString()}
                         </span>
                       </div>
                     )}

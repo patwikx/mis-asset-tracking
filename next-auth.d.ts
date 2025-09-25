@@ -1,6 +1,7 @@
 // next-auth.d.ts
 import NextAuth, { type DefaultSession } from "next-auth";
 import { JWT } from "next-auth/jwt";
+import { Prisma } from "@prisma/client";
 
 // Define the structure for a user's role
 export interface UserRole {
@@ -8,7 +9,7 @@ export interface UserRole {
   name: string;
   code: string;
   description: string | null;
-  permissions: Record<string, unknown> | null;
+  permissions: Prisma.JsonValue | null; // Changed to match Prisma's JsonValue
 }
 
 // Define the structure for a user's department
@@ -34,15 +35,15 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      employeeId: string; // Company employee ID from schema
-      email: string;
+      employeeId: string;
+      email: string | null;
       firstName: string;
       lastName: string;
       middleName: string | null;
       name: string; // Computed from firstName + lastName
       position: string | null;
       isActive: boolean;
-      hireDate: string | null; // ISO string representation of DateTime
+      hireDate: string | null;
       businessUnit: UserBusinessUnit;
       department: UserDepartment;
       role: UserRole;
@@ -52,7 +53,7 @@ declare module "next-auth" {
   interface User {
     id: string;
     employeeId: string;
-    email: string;
+    email: string | null;
     firstName: string;
     lastName: string;
     middleName: string | null;
@@ -66,15 +67,14 @@ declare module "next-auth" {
 }
 
 declare module "next-auth/jwt" {
-  /** Returned by the `jwt` callback and sent to the `Session` callback */
   interface JWT {
     id: string;
     employeeId: string;
-    email: string;
+    email: string | null;
     firstName: string;
     lastName: string;
     middleName: string | null;
-    name: string; // Computed from firstName + lastName
+    name: string;
     position: string | null;
     isActive: boolean;
     hireDate: string | null;

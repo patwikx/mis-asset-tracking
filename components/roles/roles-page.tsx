@@ -16,6 +16,8 @@ import type {
   PaginatedResponse 
 } from '@/types/role-types';
 import { getRoles } from '@/lib/actions/role-actions';
+import { useRouter } from 'next/navigation';
+import { useBusinessUnit } from '@/context/business-unit-context';
 
 export const RolesPage: React.FC = () => {
   const [roles, setRoles] = useState<RoleWithCounts[]>([]);
@@ -24,6 +26,8 @@ export const RolesPage: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleWithCounts | null>(null);
+  const router = useRouter();
+  const { businessUnitId } = useBusinessUnit();
   
   const [filters, setFilters] = useState<RoleFilters>({});
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
@@ -56,10 +60,8 @@ export const RolesPage: React.FC = () => {
     setSelectedRole(null);
     setShowCreateDialog(true);
   };
-
   const handleView = (role: RoleWithCounts) => {
-    console.log('View role:', role);
-    toast.info('Role detail view coming soon');
+    router.push(`/${businessUnitId}/roles/${role.id}`);
   };
 
   const handleEdit = (role: RoleWithCounts) => {

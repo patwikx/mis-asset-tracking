@@ -16,14 +16,18 @@ import type {
   PaginatedResponse 
 } from '@/types/department-types';
 import { getDepartments } from '@/lib/actions/department-actions';
+import { useBusinessUnit } from '@/context/business-unit-context';
+import { useRouter } from 'next/navigation';
 
 export const DepartmentsPage: React.FC = () => {
+  const { businessUnitId } = useBusinessUnit();
   const [departments, setDepartments] = useState<DepartmentWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentWithRelations | null>(null);
+  const router = useRouter();
   
   const [filters, setFilters] = useState<DepartmentFilters>({});
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
@@ -35,9 +39,16 @@ export const DepartmentsPage: React.FC = () => {
   });
 
   const loadDepartments = useCallback(async () => {
+    if (!businessUnitId) return;
+    
     setIsLoading(true);
     try {
-      const result: PaginatedResponse<DepartmentWithRelations> = await getDepartments(filters, pagination);
+      // Include businessUnitId in filters to filter departments by selected business unit
+      const filtersWithBusinessUnit = {
+        ...filters,
+        businessUnitId
+      };
+      const result: PaginatedResponse<DepartmentWithRelations> = await getDepartments(filtersWithBusinessUnit, pagination);
       setDepartments(result.data);
       setPaginationInfo(result.pagination);
     } catch (error) {
@@ -46,7 +57,7 @@ export const DepartmentsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, pagination]);
+  }, [businessUnitId, filters, pagination]);
 
   useEffect(() => {
     loadDepartments();
@@ -57,10 +68,9 @@ export const DepartmentsPage: React.FC = () => {
     setShowCreateDialog(true);
   };
 
-  const handleView = (department: DepartmentWithRelations) => {
-    console.log('View department:', department);
-    toast.info('Department detail view coming soon');
-  };
+   const handleView = (department: DepartmentWithRelations) => {
+     router.push(`/${businessUnitId}/departments/${department.id}`);
+   };
 
   const handleEdit = (department: DepartmentWithRelations) => {
     setSelectedDepartment(department);

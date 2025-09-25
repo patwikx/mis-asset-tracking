@@ -65,6 +65,7 @@ export interface CreateDeploymentData {
   assetId: string;
   employeeId: string;
   businessUnitId: string;
+  transmittalNumber?: string; // Will be auto-generated if not provided
   expectedReturnDate?: Date;
   deploymentNotes?: string;
   deploymentCondition?: string;
@@ -113,4 +114,11 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface BulkDeploymentData {
+  assetId: string;
+  employeeId: string;
+  businessUnitId: string;
+  deploymentNotes?: string;
 }

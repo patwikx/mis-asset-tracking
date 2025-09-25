@@ -102,7 +102,7 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
         },
         {
           title: "Audit Logs",
-          url: `/${businessUnitId}/reports/audit`,
+          url: `/${businessUnitId}/audit-logs`,
         },
       ],
     },

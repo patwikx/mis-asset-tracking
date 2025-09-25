@@ -88,7 +88,7 @@ export const DepartmentFiltersComponent: React.FC<DepartmentFiltersComponentProp
                     <SelectValue placeholder="All business units" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All business units</SelectItem>
+                    <SelectItem value="all-BU">All business units</SelectItem>
                     {businessUnits.map((unit) => (
                       <SelectItem key={unit.id} value={unit.id}>
                         {unit.name}
@@ -113,7 +113,7 @@ export const DepartmentFiltersComponent: React.FC<DepartmentFiltersComponentProp
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all-statuses">All statuses</SelectItem>
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
                   </SelectContent>

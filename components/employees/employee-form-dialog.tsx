@@ -93,6 +93,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
     if (open) {
       loadFormData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, employee]);
 
   const loadFormData = async () => {

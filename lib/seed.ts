@@ -1371,6 +1371,7 @@ async function main(): Promise<void> {
     if (laptopAsset && employeeJohn && itBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0001',
           assetId: laptopAsset.id,
           employeeId: employeeJohn.id,
           businessUnitId: itBusinessUnit.id,
@@ -1399,6 +1400,7 @@ async function main(): Promise<void> {
     if (thinkpadAsset && employeeSarah && hrBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0002',
           assetId: thinkpadAsset.id,
           employeeId: employeeSarah.id,
           businessUnitId: hrBusinessUnit.id,
@@ -1421,6 +1423,7 @@ async function main(): Promise<void> {
     if (desktopAsset && employeeEmily && itBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0003',
           assetId: desktopAsset.id,
           employeeId: employeeEmily.id,
           businessUnitId: itBusinessUnit.id,
@@ -1444,6 +1447,7 @@ async function main(): Promise<void> {
     if (galaxyAsset && employeeRobert && salesBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0004',
           assetId: galaxyAsset.id,
           employeeId: employeeRobert.id,
           businessUnitId: salesBusinessUnit.id,
@@ -1467,6 +1471,7 @@ async function main(): Promise<void> {
     if (monitorAsset && employeeKevin && rndBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0005',
           assetId: monitorAsset.id,
           employeeId: employeeKevin.id,
           businessUnitId: rndBusinessUnit.id,
@@ -1490,6 +1495,7 @@ async function main(): Promise<void> {
     if (chairAsset && employeeMaria && supportBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0006',
           assetId: chairAsset.id,
           employeeId: employeeMaria.id,
           businessUnitId: supportBusinessUnit.id,
@@ -1511,6 +1517,7 @@ async function main(): Promise<void> {
     if (vehicleAsset && employeeRobert && salesBusinessUnit && accountingApprover) {
       await prisma.assetDeployment.create({
         data: {
+          transmittalNumber: 'TN-2024-0007',
           assetId: vehicleAsset.id,
           employeeId: employeeRobert.id,
           businessUnitId: salesBusinessUnit.id,

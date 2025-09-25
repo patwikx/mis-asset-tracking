@@ -10,21 +10,12 @@ export const metadata: Metadata = {
   description: 'Manage application configuration and settings',
 };
 
-interface SystemSettingsPageProps {
-  params: Promise<{
-    businessUnitId: string;
-  }>;
-}
-
-export default async function SystemSettings({ params }: SystemSettingsPageProps) {
+export default async function SystemSettings() {
   const session = await auth();
   
   if (!session?.user) {
     redirect('/auth/sign-in');
   }
-
-  // Await params before using its properties
-  const { businessUnitId } = await params;
 
   return <SystemSettingsPage />;
 }

@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import type { 
   EmployeeWithRelations, 
@@ -20,6 +21,7 @@ import { EmployeeDeleteDialog } from './employee-delete-dialog';
 
 export const EmployeesPage: React.FC = () => {
   const { businessUnitId } = useBusinessUnit();
+  const router = useRouter();
   const [employees, setEmployees] = useState<EmployeeWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -62,9 +64,7 @@ export const EmployeesPage: React.FC = () => {
   };
 
   const handleView = (employee: EmployeeWithRelations) => {
-    // TODO: Implement employee detail view
-    console.log('View employee:', employee);
-    toast.info('Employee detail view coming soon');
+    router.push(`/${businessUnitId}/employees/${employee.id}`);
   };
 
   const handleEdit = (employee: EmployeeWithRelations) => {

@@ -63,7 +63,7 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
     baseActions.push({
       title: "Admin Panel",
       description: "Manage system settings",
-      href: `/${businessUnitId}/admin`,
+      href: `/${businessUnitId}/admin/business-units`,
       icon: Settings,
       variant: 'outline'
     });

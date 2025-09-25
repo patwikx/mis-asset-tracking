@@ -9,23 +9,35 @@ export const authConfig = {
     Credentials({
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
-
         if (validatedFields.success) {
           const { employeeId, passwordHash } = validatedFields.data;
-          const user = await getUserByUsername(employeeId);
-
-          // UPDATED: Check for 'passwordHash' instead of 'password'
-          if (!user || !user.passwordHash) return null;
-
-          // UPDATED: Compare against 'passwordHash' instead of 'password'
+          const employee = await getUserByUsername(employeeId);
+          
+          if (!employee || !employee.passwordHash) return null;
+          
           const passwordsMatch = await bcryptjs.compare(
             passwordHash,
-            user.passwordHash
+            employee.passwordHash
           );
-          
-          if (passwordsMatch) return user;
+         
+          if (passwordsMatch) {
+            // Transform Employee to User format matching your types
+            return {
+              id: employee.id,
+              employeeId: employee.employeeId,
+              email: employee.email,
+              firstName: employee.firstName,
+              lastName: employee.lastName,
+              middleName: employee.middleName,
+              position: employee.position,
+              isActive: employee.isActive,
+              hireDate: employee.hireDate?.toISOString() || null,
+              businessUnit: employee.businessUnit,
+              department: employee.department,
+              role: employee.role,
+            };
+          }
         }
-
         return null;
       },
     }),

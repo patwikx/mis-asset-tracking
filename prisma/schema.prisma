@@ -104,6 +104,9 @@ model Employee {
   sessions Session[]
   accounts Account[]
 
+  // Audit logs
+  auditLogs AuditLog[] @relation("AuditLogEmployee")
+
   @@map("employees")
 }
 
@@ -201,6 +204,7 @@ enum DeploymentStatus {
 // Asset Deployments (Tracking who has what and when)
 model AssetDeployment {
   id                 String           @id @default(uuid())
+  transmittalNumber  String           @unique // Auto-incremental transmittal number
   assetId            String
   employeeId         String // Who the asset is deployed to
   businessUnitId     String
@@ -309,10 +313,13 @@ model AuditLog {
   action    String // CREATE, UPDATE, DELETE
   oldValues Json? // Previous values (for updates)
   newValues Json? // New values
-  userId    String // Who made the change
+  userId    String // Who made the change (Employee ID)
   timestamp DateTime @default(now())
   ipAddress String?
   userAgent String?
+
+  // Relations
+  employee Employee @relation("AuditLogEmployee", fields: [userId], references: [id])
 
   @@map("audit_logs")
 }
@@ -369,6 +376,24 @@ model SystemSetting {
   updatedAt   DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+// Reports for analytics and reporting
+model Report {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  type           String // ASSET_INVENTORY, DEPLOYMENT_SUMMARY, etc.
+  parameters     Json? // Report parameters as JSON
+  data           Json // Report data as JSON
+  generatedBy    String // Employee ID who generated the report
+  generatedAt    DateTime @default(now())
+  businessUnitId String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("reports")
 }
 
 // Notifications for pending approvals, returns, etc.

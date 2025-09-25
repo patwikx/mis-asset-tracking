@@ -70,6 +70,7 @@ export const DepartmentFormDialog: React.FC<DepartmentFormDialogProps> = ({
     if (open) {
       loadFormData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, department]);
 
   const loadFormData = async () => {

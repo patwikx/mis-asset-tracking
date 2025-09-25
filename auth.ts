@@ -2,16 +2,6 @@ import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { authConfig } from "./auth.config"
-import type { Prisma } from "@prisma/client"
-
-// Helper function to safely convert JsonValue to our expected permissions type
-function parsePermissions(jsonValue: Prisma.JsonValue | null): Record<string, unknown> | null {
-  if (jsonValue === null) return null;
-  if (typeof jsonValue === 'object' && jsonValue !== null && !Array.isArray(jsonValue)) {
-    return jsonValue as Record<string, unknown>;
-  }
-  return null;
-}
 
 export const {
   handlers: { GET, POST },
@@ -87,13 +77,13 @@ export const {
         description: employeeWithDetails.department.description
       };
       
-      // Role data with proper permissions parsing
+      // Role data - pass permissions directly without conversion
       token.role = {
         id: employeeWithDetails.role.id,
         name: employeeWithDetails.role.name,
         code: employeeWithDetails.role.code,
         description: employeeWithDetails.role.description,
-        permissions: parsePermissions(employeeWithDetails.role.permissions)
+        permissions: employeeWithDetails.role.permissions // Direct assignment
       };
      
       return token;

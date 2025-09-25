@@ -6,7 +6,7 @@ import { Decimal } from '@prisma/client/runtime/library';
  * This prevents the "Decimal objects are not supported" error
  */
 export function serializeForClient<T>(data: T): T {
-  return JSON.parse(JSON.stringify(data, (key, value) => {
+  return JSON.parse(JSON.stringify(data, (_key: string, value: unknown) => {
     // Convert Decimal to number
     if (value instanceof Decimal) {
       return value.toNumber();
@@ -23,7 +23,7 @@ export function serializeForClient<T>(data: T): T {
  * Wrapper for server actions that return data to client components
  * Use this to wrap any server action return value that might contain Prisma objects
  */
-export function withClientSerialization<T extends (...args: any[]) => Promise<any>>(
+export function withClientSerialization<T extends (...args: unknown[]) => Promise<unknown>>(
   serverAction: T
 ): T {
   return (async (...args: Parameters<T>) => {
@@ -35,7 +35,7 @@ export function withClientSerialization<T extends (...args: any[]) => Promise<an
 /**
  * Type guard to check if an object contains Decimal fields
  */
-export function hasDecimalFields(obj: any): boolean {
+export function hasDecimalFields(obj: unknown): boolean {
   if (obj instanceof Decimal) return true;
   
   if (Array.isArray(obj)) {
