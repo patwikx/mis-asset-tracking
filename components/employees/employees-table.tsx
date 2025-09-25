@@ -12,7 +12,8 @@ import {
   Eye, 
   Users,
   Calendar,
-  Mail
+  Mail,
+  Shield
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ interface EmployeesTableProps {
   onView: (employee: EmployeeWithRelations) => void;
   onEdit: (employee: EmployeeWithRelations) => void;
   onDelete: (employee: EmployeeWithRelations) => void;
+  onManagePermissions?: (employee: EmployeeWithRelations) => void;
   isLoading?: boolean;
 }
 
@@ -36,6 +38,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  onManagePermissions,
   isLoading = false
 }) => {
   if (isLoading) {
@@ -147,6 +150,12 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            {onManagePermissions && (
+                              <DropdownMenuItem onClick={() => onManagePermissions(employee)}>
+                                <Shield className="w-4 h-4 mr-2" />
+                                Manage Permissions
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem 
                               onClick={() => onDelete(employee)}
                               className="text-destructive"
@@ -195,6 +204,12 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        {onManagePermissions && (
+                          <DropdownMenuItem onClick={() => onManagePermissions(employee)}>
+                            <Shield className="w-4 h-4 mr-2" />
+                            Manage Permissions
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => onDelete(employee)}
                           className="text-destructive"

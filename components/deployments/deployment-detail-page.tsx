@@ -1,24 +1,63 @@
 // components/deployments/deployment-detail-page.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { DeploymentApprovalDialog } from './deployment-approval-dialog';
+import { AssetReturnDialog } from './asset-return-dialog';
 import type { AssetDeploymentWithRelations } from '@/types/asset-types';
 
 interface DeploymentDetailPageProps {
   deployment: AssetDeploymentWithRelations;
   businessUnitId: string;
+  onDeploymentUpdate?: () => void;
 }
 
-export function DeploymentDetailPage({ deployment, businessUnitId }: DeploymentDetailPageProps) {
+export function DeploymentDetailPage({ 
+  deployment, 
+  businessUnitId, 
+  onDeploymentUpdate 
+}: DeploymentDetailPageProps) {
   const router = useRouter();
+  const [approvalDialog, setApprovalDialog] = useState<{
+    open: boolean;
+    action: 'approve' | 'reject';
+  }>({
+    open: false,
+    action: 'approve'
+  });
+  const [returnDialog, setReturnDialog] = useState(false);
 
   const handleBack = () => {
     router.push(`/${businessUnitId}/deployments`);
+  };
+
+  const handleApprove = () => {
+    setApprovalDialog({ open: true, action: 'approve' });
+  };
+
+  const handleReject = () => {
+    setApprovalDialog({ open: true, action: 'reject' });
+  };
+
+  const handleReturn = () => {
+    setReturnDialog(true);
+  };
+
+  const handleApprovalSuccess = () => {
+    onDeploymentUpdate?.();
+    // Optionally refresh the page or update local state
+    router.refresh();
+  };
+
+  const handleReturnSuccess = () => {
+    onDeploymentUpdate?.();
+    // Optionally refresh the page or update local state
+    router.refresh();
   };
 
   const getStatusColor = (status: string) => {
@@ -38,6 +77,10 @@ export function DeploymentDetailPage({ deployment, businessUnitId }: DeploymentD
     }
   };
 
+  const canApproveOrReject = deployment.status === 'PENDING_ACCOUNTING_APPROVAL';
+  const canReturn = deployment.status === 'DEPLOYED';
+  const canEdit = ['PENDING_ACCOUNTING_APPROVAL', 'APPROVED'].includes(deployment.status);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -54,25 +97,29 @@ export function DeploymentDetailPage({ deployment, businessUnitId }: DeploymentD
           </div>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-          {deployment.status === 'PENDING_ACCOUNTING_APPROVAL' && (
+          {canEdit && (
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          )}
+          
+          {canApproveOrReject && (
             <>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleApprove}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Approve
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleReject}>
                 <XCircle className="h-4 w-4 mr-2" />
-                Cancel
+                Reject
               </Button>
             </>
           )}
-          {deployment.status === 'DEPLOYED' && (
-            <Button variant="outline" size="sm">
-              <CheckCircle className="h-4 w-4 mr-2" />
+          
+          {canReturn && (
+            <Button variant="outline" size="sm" onClick={handleReturn}>
+              <RotateCcw className="h-4 w-4 mr-2" />
               Mark as Returned
             </Button>
           )}
@@ -249,7 +296,52 @@ export function DeploymentDetailPage({ deployment, businessUnitId }: DeploymentD
             </CardContent>
           </Card>
         )}
+
+        {/* Show cancellation information if deployment was cancelled */}
+        {deployment.status === 'CANCELLED' && (
+          <Card className="md:col-span-2 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-600">Deployment Cancelled</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Cancelled Date</label>
+                  <p className="mt-1">
+                    {deployment.accountingApprovedAt 
+                      ? new Date(deployment.accountingApprovedAt).toLocaleDateString() 
+                      : 'N/A'
+                    }
+                  </p>
+                </div>
+                {deployment.accountingNotes && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Cancellation Notes</label>
+                    <p className="mt-1">{deployment.accountingNotes}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Approval Dialog */}
+      <DeploymentApprovalDialog
+        open={approvalDialog.open}
+        onOpenChange={(open) => setApprovalDialog(prev => ({ ...prev, open }))}
+        deployment={deployment}
+        action={approvalDialog.action}
+        onSuccess={handleApprovalSuccess}
+      />
+
+      {/* Return Dialog */}
+      <AssetReturnDialog
+        open={returnDialog}
+        onOpenChange={setReturnDialog}
+        deployment={deployment}
+        onSuccess={handleReturnSuccess}
+      />
     </div>
   );
 }

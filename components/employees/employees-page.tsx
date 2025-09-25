@@ -18,6 +18,8 @@ import { EmployeesTable } from './employees-table';
 import { EmployeePagination } from './employee-pagination';
 import { EmployeeFormDialog } from './employee-form-dialog';
 import { EmployeeDeleteDialog } from './employee-delete-dialog';
+import { EmployeePermissionsDialog } from './employee-permissions-dialog';
+
 
 export const EmployeesPage: React.FC = () => {
   const { businessUnitId } = useBusinessUnit();
@@ -27,6 +29,7 @@ export const EmployeesPage: React.FC = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithRelations | null>(null);
   
   const [filters, setFilters] = useState<EmployeeFilters>({});
@@ -77,6 +80,10 @@ export const EmployeesPage: React.FC = () => {
     setShowDeleteDialog(true);
   };
 
+  const handleManagePermissions = (employee: EmployeeWithRelations) => {
+    setSelectedEmployee(employee);
+    setShowPermissionsDialog(true);
+  };
   const handleRefresh = () => {
     loadEmployees();
   };
@@ -131,6 +138,7 @@ export const EmployeesPage: React.FC = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onManagePermissions={handleManagePermissions}
         isLoading={isLoading}
       />
 
@@ -159,6 +167,13 @@ export const EmployeesPage: React.FC = () => {
       <EmployeeDeleteDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
+        employee={selectedEmployee}
+        onSuccess={handleFormSuccess}
+      />
+
+      <EmployeePermissionsDialog
+        open={showPermissionsDialog}
+        onOpenChange={setShowPermissionsDialog}
         employee={selectedEmployee}
         onSuccess={handleFormSuccess}
       />

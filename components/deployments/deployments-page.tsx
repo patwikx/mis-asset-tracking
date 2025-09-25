@@ -6,9 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { getDeployments } from '@/lib/actions/deployment-actions';
+import { DeploymentApprovalDialog } from './deployment-approval-dialog';
 import type { AssetDeploymentWithRelations, DeploymentFilters } from '@/types/asset-types';
 
 interface DeploymentsPageProps {
@@ -21,6 +28,15 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<DeploymentFilters>({});
+  const [approvalDialog, setApprovalDialog] = useState<{
+    open: boolean;
+    deployment: AssetDeploymentWithRelations | null;
+    action: 'approve' | 'reject';
+  }>({
+    open: false,
+    deployment: null,
+    action: 'approve'
+  });
 
   useEffect(() => {
     loadDeployments();
@@ -61,8 +77,36 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
     }
   };
 
-  const handleDeploymentClick = (deploymentId: string) => {
+  const handleDeploymentClick = (deploymentId: string, event: React.MouseEvent) => {
+    // Prevent navigation if clicking on action buttons
+    if ((event.target as HTMLElement).closest('[data-action-menu]')) {
+      return;
+    }
     router.push(`/${businessUnitId}/deployments/${deploymentId}`);
+  };
+
+  const handleApproveDeployment = (deployment: AssetDeploymentWithRelations) => {
+    setApprovalDialog({
+      open: true,
+      deployment,
+      action: 'approve'
+    });
+  };
+
+  const handleRejectDeployment = (deployment: AssetDeploymentWithRelations) => {
+    setApprovalDialog({
+      open: true,
+      deployment,
+      action: 'reject'
+    });
+  };
+
+  const handleApprovalSuccess = () => {
+    loadDeployments();
+  };
+
+  const canShowApprovalActions = (deployment: AssetDeploymentWithRelations) => {
+    return deployment.status === 'PENDING_ACCOUNTING_APPROVAL';
   };
 
   return (
@@ -112,7 +156,7 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
                 <div
                   key={deployment.id}
                   className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => handleDeploymentClick(deployment.id)}
+                  onClick={(e) => handleDeploymentClick(deployment.id, e)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">
@@ -135,10 +179,44 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
                         )}
                       </div>
                     </div>
-                    <div className="text-right text-sm text-muted-foreground">
-                      <p>Created: {new Date(deployment.createdAt).toLocaleDateString()}</p>
-                      {deployment.returnedDate && (
-                        <p>Returned: {new Date(deployment.returnedDate).toLocaleDateString()}</p>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-right text-sm text-muted-foreground">
+                        <p>Created: {new Date(deployment.createdAt).toLocaleDateString()}</p>
+                        {deployment.returnedDate && (
+                          <p>Returned: {new Date(deployment.returnedDate).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                      
+                      {canShowApprovalActions(deployment) && (
+                        <div data-action-menu>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApproveDeployment(deployment);
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRejectDeployment(deployment);
+                                }}
+                              >
+                                <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                                Reject
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -148,6 +226,14 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
           )}
         </CardContent>
       </Card>
+
+      <DeploymentApprovalDialog
+        open={approvalDialog.open}
+        onOpenChange={(open) => setApprovalDialog(prev => ({ ...prev, open }))}
+        deployment={approvalDialog.deployment}
+        action={approvalDialog.action}
+        onSuccess={handleApprovalSuccess}
+      />
     </div>
   );
 }
