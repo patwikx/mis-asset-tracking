@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/breadcrumb"
 
 export const metadata = {
-  title: "Tropicana Worldwide Corp.",
+  title: "Dashboard | Asset Management System",
   description: "Asset Management System for TWC",
 };
 
@@ -138,7 +138,7 @@ export default async function DashboardLayout({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
+                  <BreadcrumbLink href='/'>
                     Dashboard
                   </BreadcrumbLink>
                 </BreadcrumbItem>
