@@ -61,7 +61,7 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
   const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN'];
   if (adminRoles.includes(userRole)) {
     baseActions.push({
-      title: "Admin Panel",
+      title: "System Settings",
       description: "Manage system settings",
       href: `/${businessUnitId}/admin/business-units`,
       icon: Settings,
