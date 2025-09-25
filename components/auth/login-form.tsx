@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
-import { Eye, EyeOff, Hotel, Users, Calendar, Shield, Wifi } from "lucide-react"
+import { Eye, EyeOff, Monitor } from "lucide-react"
 
 // Keep your original imports and schema
 import { LoginSchema } from "@/lib/validations/login-schema"
@@ -30,23 +30,6 @@ const FormSuccess = ({ message }: { message?: string }) => {
     </div>
   )
 }
-
-// Feature item component for the left panel
-const FeatureItem = ({ icon: Icon, title, description }: { 
-  icon: React.ComponentType<{ className?: string }>, 
-  title: string, 
-  description: string 
-}) => (
-  <div className="flex gap-4 mb-8">
-    <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex items-center justify-center min-w-[48px] h-12 backdrop-blur-sm">
-      <Icon className="text-amber-400 w-6 h-6" />
-    </div>
-    <div>
-      <h3 className="text-gray-50 font-semibold mb-2">{title}</h3>
-      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
-    </div>
-  </div>
-)
 
 export const LoginForm = () => {
   const searchParams = useSearchParams()
@@ -101,49 +84,59 @@ export const LoginForm = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.02),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.01),transparent_50%)]"></div>
       
-      {/* Left Panel - Hotel Features */}
-      <div className="hidden lg:flex lg:w-7/12 bg-transparent p-8 xl:p-16 flex-col justify-center relative z-10">
-        {/* Logo and Brand */}
-        <div className="mb-16">
-          <div className="flex items-center gap-3 mb-2">
-            <Hotel className="text-amber-500 w-9 h-9" />
-            <h1 className="text-gray-50 text-2xl font-bold">Tropicana Worldwide Corporation</h1>
+      {/* Left Panel - Centered Abstract Design */}
+      <div className="hidden lg:flex lg:w-7/12 bg-transparent p-8 xl:p-16 flex-col justify-center items-center relative z-10">
+        <div className="relative w-full max-w-lg flex flex-col items-center">
+          {/* Modern geometric abstract design */}
+          <div className="relative w-96 h-96 flex items-center justify-center mb-12">
+            {/* Floating geometric shapes */}
+            <div className="absolute top-20 left-16 w-16 h-16 border border-white/20 rounded-lg rotate-12 animate-pulse bg-white/5 backdrop-blur-sm"></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 rounded-full animate-pulse bg-white/3" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute bottom-24 left-24 w-14 h-14 border border-white/25 rotate-45 animate-pulse bg-white/5" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute bottom-20 right-16 w-10 h-10 border border-white/20 rounded-lg -rotate-12 animate-pulse bg-white/4" style={{ animationDelay: '3s' }}></div>
+            
+            {/* Diagonal lines */}
+            <div className="absolute w-80 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent rotate-45 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute w-80 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent -rotate-45 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+            
+            {/* Central hexagon with monitor */}
+            <div className="relative">
+              <div className="w-32 h-32 border border-white/30 bg-white/5 backdrop-blur-sm flex items-center justify-center" 
+                   style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+                <Monitor className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            
+            {/* Orbiting elements */}
+            <div className="absolute w-6 h-6 border border-white/40 rounded-sm bg-white/10 animate-spin" 
+                 style={{ 
+                   top: '20%', 
+                   left: '20%', 
+                   animationDuration: '8s',
+                   transformOrigin: '120px 120px'
+                 }}>
+            </div>
+            <div className="absolute w-4 h-4 border border-white/30 rounded-full bg-white/8 animate-spin" 
+                 style={{ 
+                   top: '70%', 
+                   right: '25%', 
+                   animationDuration: '12s',
+                   animationDirection: 'reverse',
+                   transformOrigin: '-80px -80px'
+                 }}>
+            </div>
+            
+            {/* Network connection lines */}
+            <div className="absolute top-1/4 left-1/4 w-32 h-px bg-gradient-to-r from-white/20 to-transparent rotate-12"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-28 h-px bg-gradient-to-l from-white/15 to-transparent -rotate-12"></div>
+            <div className="absolute top-1/3 right-1/3 w-24 h-px bg-gradient-to-r from-transparent to-white/20 rotate-45"></div>
           </div>
-          <p className="text-gray-400 text-sm ml-12">Premium Hotel Management & Booking System</p>
-        </div>
-
-        {/* Features List */}
-        <div className="max-w-lg">
-          <FeatureItem
-            icon={Calendar}
-            title="Advanced Booking Management"
-            description="Streamline reservations with intelligent scheduling, real-time availability, and automated confirmation systems."
-          />
           
-          <FeatureItem
-            icon={Users}
-            title="Guest Experience Excellence"
-            description="Deliver personalized service with comprehensive guest profiles, preferences tracking, and loyalty program integration."
-          />
-          
-          <FeatureItem
-            icon={Shield}
-            title="Enterprise Security"
-            description="Bank-level encryption and security protocols protect sensitive guest data and payment information."
-          />
-          
-          <FeatureItem
-            icon={Wifi}
-            title="Cloud-Based Infrastructure"
-            description="Access your hotel management system anywhere with reliable cloud hosting and real-time synchronization."
-          />
-        </div>
-
-        {/* Bottom accent */}
-        <div className="mt-16 pt-8 border-t border-gray-800/50">
-          <p className="text-gray-500 text-xs">
-            Trusted by luxury hotels worldwide • ISO 27001 Certified • 24/7 Support
-          </p>
+          {/* Centered branding */}
+          <div className="text-center">
+            <h1 className="text-white text-4xl font-bold mb-3">MIS Asset Tracking System</h1>
+            <p className="text-gray-400 text-base">Comprehensive IT Asset Management Solution</p>
+          </div>
         </div>
       </div>
 
@@ -152,10 +145,10 @@ export const LoginForm = () => {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <Hotel className="text-amber-500 w-8 h-8" />
+            <Monitor className="text-white w-8 h-8" />
             <div className="text-center">
-              <h1 className="text-gray-50 text-xl font-bold">Tropicana Worldwide</h1>
-              <p className="text-gray-500 text-xs">Hotel System</p>
+              <h1 className="text-gray-50 text-xl font-bold">MIS Asset Tracking</h1>
+              <p className="text-gray-500 text-xs">Asset Management System</p>
             </div>
           </div>
 
@@ -165,7 +158,7 @@ export const LoginForm = () => {
               {showTwoFactor ? "Two-Factor Authentication" : "Welcome Back"}
             </h2>
             {!showTwoFactor && (
-              <p className="text-gray-400">Access your hotel management dashboard</p>
+              <p className="text-gray-400">Access your asset management dashboard</p>
             )}
           </div>
 
@@ -186,7 +179,7 @@ export const LoginForm = () => {
                       type="text"
                       placeholder="123456"
                       disabled={isLoading}
-                      className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 text-gray-100 text-xl tracking-wider text-center focus:border-amber-500 focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-amber-500/20"
+                      className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 text-gray-100 text-xl tracking-wider text-center focus:border-white focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-white/20"
                     />
                   )}
                 />
@@ -210,7 +203,7 @@ export const LoginForm = () => {
                         type="text"
                         placeholder="Enter your employee ID"
                         disabled={isLoading}
-                        className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 text-gray-100 focus:border-amber-500 focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-amber-500/20"
+                        className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 text-gray-100 focus:border-white focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-white/20"
                       />
                     )}
                   />
@@ -236,14 +229,14 @@ export const LoginForm = () => {
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
                           disabled={isLoading}
-                          className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 pr-12 text-gray-100 focus:border-amber-500 focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-amber-500/20"
+                          className="w-full h-14 bg-black border border-gray-800 rounded-lg px-4 pr-12 text-gray-100 focus:border-white focus:outline-none transition-all duration-200 focus:ring-1 focus:ring-white/20"
                         />
                       )}
                     />
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-amber-400 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -260,7 +253,7 @@ export const LoginForm = () => {
                     <input
                       type="checkbox"
                       id="remember"
-                      className="w-4 h-4 text-amber-600 bg-black border-gray-700 rounded focus:ring-amber-500 focus:ring-2"
+                      className="w-4 h-4 text-white bg-black border-gray-700 rounded focus:ring-white focus:ring-2"
                     />
                     <label htmlFor="remember" className="ml-2 text-gray-400 text-sm">
                       Remember me
@@ -268,7 +261,7 @@ export const LoginForm = () => {
                   </div>
                   <Link 
                     href="/auth/forgot-password" 
-                    className="text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors"
+                    className="text-white hover:text-gray-300 text-sm font-medium transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -284,7 +277,7 @@ export const LoginForm = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-black font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/20"
+              className="w-full h-14 bg-white hover:bg-gray-200 disabled:bg-gray-800 disabled:text-gray-500 text-black font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-white/20"
             >
               {isLoading ? (
                 <>
@@ -303,7 +296,7 @@ export const LoginForm = () => {
                   Need access to the system?{' '}
                   <Link 
                     href="/auth/register" 
-                    className="text-white-400 hover:text-blue-500 font-medium transition-colors"
+                    className="text-white hover:text-gray-300 font-medium transition-colors"
                   >
                     Request Account
                   </Link>
