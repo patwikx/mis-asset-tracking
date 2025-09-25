@@ -5,8 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Share, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Download, Share, Trash2 } from 'lucide-react';
 import type { Report, AssetInventoryReport, DeploymentSummaryReport } from '@/types/report-types';
 
 interface ReportDetailPageProps {
@@ -14,12 +13,8 @@ interface ReportDetailPageProps {
   businessUnitId: string;
 }
 
-export function ReportDetailPage({ report, businessUnitId }: ReportDetailPageProps) {
-  const router = useRouter();
+export function ReportDetailPage({ report }: ReportDetailPageProps) {
 
-  const handleBack = () => {
-    router.push(`/dashboard/${businessUnitId}/reports`);
-  };
 
   const getReportTypeColor = (type: string) => {
     switch (type) {
@@ -213,10 +208,6 @@ export function ReportDetailPage({ report, businessUnitId }: ReportDetailPagePro
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Reports
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">{report.name}</h1>
             <p className="text-muted-foreground">{report.description}</p>

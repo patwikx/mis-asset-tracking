@@ -5,8 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Edit, Trash2 } from 'lucide-react';
 import type { AssetWithRelations } from '@/types/asset-types';
 
 interface AssetDetailPageProps {
@@ -14,12 +13,7 @@ interface AssetDetailPageProps {
   businessUnitId: string;
 }
 
-export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/assets`);
-  };
+export function AssetDetailPage({ asset }: AssetDetailPageProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -40,10 +34,6 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Assets
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">{asset.itemCode}</h1>
             <p className="text-muted-foreground">{asset.description}</p>

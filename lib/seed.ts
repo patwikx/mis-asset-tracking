@@ -15,6 +15,7 @@ interface DepartmentData {
   description: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface RoleData {
   name: string;
   code: string;
@@ -193,6 +194,7 @@ async function main(): Promise<void> {
       position: 'System Administrator'
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const createdAdmin = await prisma.employee.create({
       data: {
         employeeId: adminEmployee.employeeId,
@@ -289,3 +291,4 @@ main()
     console.error('❌ Seeding failed:', error);
     process.exit(1);
   });
+

@@ -5,8 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Trash2, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Edit, Trash2, Users } from 'lucide-react';
 import type { RoleWithCounts } from '@/types/role-types';
 
 interface RoleDetailPageProps {
@@ -14,12 +13,8 @@ interface RoleDetailPageProps {
   businessUnitId: string;
 }
 
-export function RoleDetailPage({ role, businessUnitId }: RoleDetailPageProps) {
-  const router = useRouter();
+export function RoleDetailPage({ role }: RoleDetailPageProps) {
 
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/roles`);
-  };
 
   const renderPermissions = (permissions: Record<string, unknown> | null) => {
     if (!permissions || typeof permissions !== 'object') {
@@ -63,10 +58,6 @@ export function RoleDetailPage({ role, businessUnitId }: RoleDetailPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Roles
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">{role.name}</h1>
             <p className="text-muted-foreground">{role.description || 'No description available'}</p>

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { Edit, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DeploymentApprovalDialog } from './deployment-approval-dialog';
 import { AssetReturnDialog } from './asset-return-dialog';
@@ -19,7 +19,6 @@ interface DeploymentDetailPageProps {
 
 export function DeploymentDetailPage({ 
   deployment, 
-  businessUnitId, 
   onDeploymentUpdate 
 }: DeploymentDetailPageProps) {
   const router = useRouter();
@@ -32,9 +31,6 @@ export function DeploymentDetailPage({
   });
   const [returnDialog, setReturnDialog] = useState(false);
 
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/deployments`);
-  };
 
   const handleApprove = () => {
     setApprovalDialog({ open: true, action: 'approve' });
@@ -85,10 +81,6 @@ export function DeploymentDetailPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Deployments
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Deployment Details</h1>
             <p className="text-muted-foreground">

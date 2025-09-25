@@ -5,8 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import type { EmployeeWithRelations } from '@/types/employee-types';
 
 interface EmployeeDetailPageProps {
@@ -14,21 +13,14 @@ interface EmployeeDetailPageProps {
   businessUnitId: string;
 }
 
-export function EmployeeDetailPage({ employee, businessUnitId }: EmployeeDetailPageProps) {
-  const router = useRouter();
+export function EmployeeDetailPage({ employee }: EmployeeDetailPageProps) {
 
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/employees`);
-  };
+
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Employees
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">
               {employee.firstName} {employee.lastName}

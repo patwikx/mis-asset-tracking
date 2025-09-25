@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Edit, Trash2, Settings } from 'lucide-react';
+import { Edit, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +26,6 @@ export const SystemSettingDetailPage: React.FC<SystemSettingDetailPageProps> = (
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/system-settings`);
-  };
 
   const handleEdit = () => {
     setShowEditDialog(true);
@@ -93,18 +90,6 @@ export const SystemSettingDetailPage: React.FC<SystemSettingDetailPageProps> = (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to System Settings</span>
-          </Button>
-        </div>
-        
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"

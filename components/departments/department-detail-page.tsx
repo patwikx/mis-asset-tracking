@@ -5,8 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Users, Building } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Edit, Users, Building } from 'lucide-react';
 import type { DepartmentWithRelations } from '@/types/department-types';
 
 interface DepartmentDetailPageProps {
@@ -14,12 +13,9 @@ interface DepartmentDetailPageProps {
   businessUnitId: string;
 }
 
-export function DepartmentDetailPage({ department, businessUnitId }: DepartmentDetailPageProps) {
-  const router = useRouter();
+export function DepartmentDetailPage({ department }: DepartmentDetailPageProps) {
 
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/departments`);
-  };
+
 
   const handleEdit = () => {
     // TODO: Implement edit functionality
@@ -30,10 +26,6 @@ export function DepartmentDetailPage({ department, businessUnitId }: DepartmentD
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Departments
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">{department.name}</h1>
             <p className="text-muted-foreground">{department.description}</p>
