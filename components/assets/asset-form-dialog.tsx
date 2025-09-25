@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -36,7 +36,8 @@ import type {
 import { 
   createAsset, 
   updateAsset, 
-  getAssetCategories
+  getAssetCategories,
+  getNextItemCode
 } from '@/lib/actions/asset-actions';
 import { useBusinessUnit } from '@/context/business-unit-context';
 
@@ -70,6 +71,7 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
   onSuccess
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; code: string }>>([]);
   const [statuses] = useState<AssetStatus[]>(Object.values(AssetStatus));
   const { businessUnitId } = useBusinessUnit();
@@ -99,6 +101,14 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, asset]);
 
+  // Generate item code when category changes (for new assets only)
+  useEffect(() => {
+    if (!isEditing && formData.categoryId && businessUnitId) {
+      generateItemCode();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.categoryId, businessUnitId, isEditing]);
+
   const loadFormData = async () => {
     try {
       const categoriesData = await getAssetCategories();
@@ -123,7 +133,7 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
       } else {
         // Reset form for new asset
         setFormData({
-          itemCode: '',
+          itemCode: 'Select category to generate',
           description: '',
           serialNumber: '',
           modelNumber: '',
@@ -144,13 +154,37 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
     }
   };
 
+  const generateItemCode = async () => {
+    if (!businessUnitId || !formData.categoryId) return;
+    
+    setIsGeneratingCode(true);
+    try {
+      const nextCode = await getNextItemCode(businessUnitId, formData.categoryId);
+      setFormData(prev => ({ ...prev, itemCode: nextCode }));
+    } catch (error) {
+      console.error('Error generating item code:', error);
+      toast.error('Failed to generate item code');
+      setFormData(prev => ({ ...prev, itemCode: 'Error generating code' }));
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      categoryId,
+      // Reset item code when category changes for new assets
+      itemCode: isEditing ? prev.itemCode : 'Generating...'
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const submitData = {
-        itemCode: formData.itemCode,
         description: formData.description,
         serialNumber: formData.serialNumber || undefined,
         modelNumber: formData.modelNumber || undefined,
@@ -173,7 +207,8 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
           ...submitData
         } as UpdateAssetData);
       } else {
-        result = await createAsset(submitData as CreateAssetData);
+        // For new assets, let the server generate the item code
+        result = await createAsset(submitData as Omit<CreateAssetData, 'itemCode'>);
       }
 
       if (result.success) {
@@ -205,34 +240,62 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
           <DialogDescription>
             {isEditing 
               ? 'Update the asset information below.' 
-              : 'Fill in the details to create a new asset.'
+              : 'Fill in the details to create a new asset. The item code will be generated automatically.'
             }
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Item Code */}
+            {/* Item Code - Read Only */}
             <div className="space-y-2">
-              <Label htmlFor="itemCode">Item Code *</Label>
-              <Input
-                id="itemCode"
-                value={formData.itemCode}
-                onChange={(e) => updateFormData('itemCode', e.target.value)}
-                placeholder="e.g., LAP001"
-                required
-              />
+              <Label htmlFor="itemCode">
+                Item Code {!isEditing && '*'}
+                {!isEditing && (
+                  <span className="text-sm text-muted-foreground ml-1">
+                    (Auto-generated)
+                  </span>
+                )}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="itemCode"
+                  value={formData.itemCode}
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
+                  placeholder={isEditing ? "" : "Select category to generate"}
+                />
+                {!isEditing && formData.categoryId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                    onClick={generateItemCode}
+                    disabled={isGeneratingCode}
+                    title="Refresh item code"
+                  >
+                    <RefreshCw className={cn("h-3 w-3", isGeneratingCode && "animate-spin")} />
+                  </Button>
+                )}
+              </div>
+              {!isEditing && !formData.categoryId && (
+                <p className="text-sm text-muted-foreground">
+                  Select a category first to generate the item code
+                </p>
+              )}
             </div>
 
             {/* Category */}
-            <div className="space-y-2">
+            <div className="space-y-2 mt-1.5">
               <Label htmlFor="categoryId">Category *</Label>
               <Select 
                 value={formData.categoryId} 
-                onValueChange={(value) => updateFormData('categoryId', value)}
+                onValueChange={handleCategoryChange}
                 required
+                disabled={isEditing} // Prevent category change when editing
               >
-                <SelectTrigger>
+                <SelectTrigger className='w-full'>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,6 +306,11 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+              {isEditing && (
+                <p className="text-sm text-muted-foreground">
+                  Category cannot be changed when editing an asset
+                </p>
+              )}
             </div>
           </div>
 
@@ -293,8 +361,6 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
                 placeholder="e.g., Apple"
               />
             </div>
-
-
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -434,7 +500,10 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading || (!isEditing && !formData.categoryId)}
+            >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isEditing ? 'Update Asset' : 'Create Asset'}
             </Button>

@@ -28,6 +28,86 @@ type AuditLogData = {
   userAgent?: string;
 };
 
+// Function to generate next item code
+async function generateNextItemCode(businessUnitId: string, categoryId: string): Promise<string> {
+  try {
+    // Get category code
+    const category = await prisma.assetCategory.findUnique({
+      where: { id: categoryId },
+      select: { code: true }
+    });
+
+    if (!category) {
+      throw new Error('Category not found');
+    }
+
+    // Get business unit code
+    const businessUnit = await prisma.businessUnit.findUnique({
+      where: { id: businessUnitId },
+      select: { code: true }
+    });
+
+    const businessUnitCode = businessUnit?.code || 'GEN';
+    const categoryCode = category.code;
+    
+    // Find the latest item code for this category and business unit
+    const latestAsset = await prisma.asset.findFirst({
+      where: {
+        categoryId,
+        businessUnitId,
+        itemCode: {
+          startsWith: `${businessUnitCode}-${categoryCode}-`
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    let nextNumber = 1;
+    
+    if (latestAsset) {
+      // Extract the number from the latest item code
+      // Format: BU-CAT-001
+      const parts = latestAsset.itemCode.split('-');
+      if (parts.length >= 3) {
+        const numberPart = parts[parts.length - 1];
+        const currentNumber = parseInt(numberPart, 10);
+        if (!isNaN(currentNumber)) {
+          nextNumber = currentNumber + 1;
+        }
+      }
+    }
+
+    // Format with leading zeros (3 digits)
+    const formattedNumber = nextNumber.toString().padStart(3, '0');
+    return `${businessUnitCode}-${categoryCode}-${formattedNumber}`;
+    
+  } catch (error) {
+    console.error('Error generating item code:', error);
+    // Fallback to timestamp-based code
+    const timestamp = Date.now().toString().slice(-6);
+    return `GEN-AST-${timestamp}`;
+  }
+}
+
+// New function to get next available item code for preview
+export async function getNextItemCode(businessUnitId: string, categoryId: string): Promise<string> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
+
+    if (!categoryId) {
+      return 'Select category first';
+    }
+
+    return await generateNextItemCode(businessUnitId, categoryId);
+  } catch (error) {
+    console.error('Error getting next item code:', error);
+    return 'Error generating code';
+  }
+}
+
 export async function getAssets(
   businessUnitId: string,
   filters: AssetFilters = {},
@@ -147,28 +227,36 @@ export async function getAssetById(id: string): Promise<AssetWithRelations | nul
   }
 }
 
-export async function createAsset(data: CreateAssetData): Promise<{ success: boolean; message: string; assetId?: string }> {
+// Modified CreateAssetData type to make itemCode optional
+type CreateAssetDataWithoutItemCode = Omit<CreateAssetData, 'itemCode'> & {
+  itemCode?: string;
+};
+
+export async function createAsset(data: CreateAssetDataWithoutItemCode): Promise<{ success: boolean; message: string; assetId?: string }> {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return { success: false, message: 'Unauthorized' };
     }
 
-    // Check if item code already exists
+    // Generate item code if not provided
+    const itemCode = data.itemCode || await generateNextItemCode(data.businessUnitId, data.categoryId);
+
+    // Check if generated item code already exists (very unlikely but safety check)
     const existingAsset = await prisma.asset.findFirst({
       where: { 
-        itemCode: data.itemCode,
+        itemCode,
         isActive: true
       }
     });
 
     if (existingAsset) {
-      return { success: false, message: 'Asset with this item code already exists' };
+      return { success: false, message: 'Generated item code already exists. Please try again.' };
     }
 
     // Prepare asset data with proper types
     const assetData: Prisma.AssetCreateInput = {
-      itemCode: data.itemCode,
+      itemCode,
       description: data.description,
       serialNumber: data.serialNumber,
       modelNumber: data.modelNumber,
@@ -205,7 +293,7 @@ export async function createAsset(data: CreateAssetData): Promise<{ success: boo
       tableName: 'Asset',
       recordId: asset.id,
       newValues: {
-        itemCode: data.itemCode,
+        itemCode,
         description: data.description,
         serialNumber: data.serialNumber,
         modelNumber: data.modelNumber,
@@ -254,31 +342,21 @@ export async function updateAsset(data: UpdateAssetData): Promise<{ success: boo
       return { success: false, message: 'Asset not found' };
     }
 
-    // Check if item code already exists (if being updated)
-    if (updateData.itemCode && updateData.itemCode !== currentAsset.itemCode) {
-      const existingAsset = await prisma.asset.findFirst({
-        where: { 
-          itemCode: updateData.itemCode,
-          isActive: true,
-          id: { not: id }
-        }
-      });
-
-      if (existingAsset) {
-        return { success: false, message: 'Asset with this item code already exists' };
-      }
-    }
+    // For updates, we don't allow changing item codes
+    // Remove itemCode from updateData if it exists
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { itemCode, ...sanitizedUpdateData } = updateData as UpdateAssetData & { itemCode?: string };
 
     // Prepare update data with proper types
     const assetUpdateData: Prisma.AssetUpdateInput = {
-      ...updateData,
-      specifications: updateData.specifications !== undefined
-        ? (updateData.specifications 
-          ? updateData.specifications as Prisma.InputJsonValue 
+      ...sanitizedUpdateData,
+      specifications: sanitizedUpdateData.specifications !== undefined
+        ? (sanitizedUpdateData.specifications 
+          ? sanitizedUpdateData.specifications as Prisma.InputJsonValue 
           : Prisma.JsonNull)
         : undefined,
-      purchasePrice: updateData.purchasePrice 
-        ? new Prisma.Decimal(updateData.purchasePrice) 
+      purchasePrice: sanitizedUpdateData.purchasePrice 
+        ? new Prisma.Decimal(sanitizedUpdateData.purchasePrice) 
         : undefined,
       updatedAt: new Date()
     };
@@ -312,11 +390,11 @@ export async function updateAsset(data: UpdateAssetData): Promise<{ success: boo
         notes: currentAsset.notes
       } as Prisma.InputJsonValue,
       newValues: {
-        ...updateData,
-        specifications: updateData.specifications,
-        purchaseDate: updateData.purchaseDate?.toISOString(),
-        purchasePrice: updateData.purchasePrice,
-        warrantyExpiry: updateData.warrantyExpiry?.toISOString()
+        ...sanitizedUpdateData,
+        specifications: sanitizedUpdateData.specifications,
+        purchaseDate: sanitizedUpdateData.purchaseDate?.toISOString(),
+        purchasePrice: sanitizedUpdateData.purchasePrice,
+        warrantyExpiry: sanitizedUpdateData.warrantyExpiry?.toISOString()
       } as Prisma.InputJsonValue,
       timestamp: new Date()
     };

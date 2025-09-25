@@ -13,6 +13,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import type { SystemAlert } from '@/types/dashboard-types';
 
+
 interface SystemAlertsProps {
   alerts: SystemAlert[];
 }
@@ -61,6 +62,8 @@ const getSeverityDotColor = (severity: SystemAlert['severity']): string => {
       return 'bg-gray-500';
   }
 };
+
+
 
 const getActionLink = (alert: SystemAlert): string | null => {
   switch (alert.type) {
