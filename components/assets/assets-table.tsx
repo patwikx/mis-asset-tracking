@@ -12,7 +12,6 @@ import {
   Eye, 
   Package,
   Calendar,
-  DollarSign
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -154,8 +153,8 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({
                       <td className="py-3 px-4">
                         {asset.purchasePrice ? (
                           <div className="flex items-center">
-                            <DollarSign className="w-4 h-4 mr-1" />
-                            {asset.purchasePrice.toLocaleString()}
+                           
+                             ₱ {asset.purchasePrice.toLocaleString()}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
