@@ -655,13 +655,43 @@ export async function createBulkDeployments(
       return { success: false, message: 'Some employees are not found or inactive' };
     }
 
+    // Generate all transmittal numbers BEFORE the transaction
+    const transmittalNumbers: string[] = [];
+    const currentYear = new Date().getFullYear();
+    const prefix = `TN-${currentYear}-`;
+    
+    // Get the latest transmittal number for the current year
+    const latestDeployment = await prisma.assetDeployment.findFirst({
+      where: {
+        transmittalNumber: {
+          startsWith: prefix
+        }
+      },
+      orderBy: {
+        transmittalNumber: 'desc'
+      }
+    });
+
+    let nextNumber = 1;
+    if (latestDeployment) {
+      // Extract the number part and increment
+      const numberPart = latestDeployment.transmittalNumber.replace(prefix, '');
+      nextNumber = parseInt(numberPart) + 1;
+    }
+
+    // Generate sequential transmittal numbers for all deployments
+    for (let i = 0; i < deployments.length; i++) {
+      const transmittalNumber = `${prefix}${(nextNumber + i).toString().padStart(4, '0')}`;
+      transmittalNumbers.push(transmittalNumber);
+    }
+
     // Create all deployments in a transaction
     const createdDeployments = await prisma.$transaction(async (tx) => {
       const results = [];
       
-      for (const deploymentData of deployments) {
-        // Generate transmittal number for each deployment
-        const transmittalNumber = await generateTransmittalNumber();
+      for (let i = 0; i < deployments.length; i++) {
+        const deploymentData = deployments[i];
+        const transmittalNumber = transmittalNumbers[i];
         
         // Prepare deployment data with proper types
         const bulkDeploymentData: Prisma.AssetDeploymentCreateInput = {

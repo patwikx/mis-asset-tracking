@@ -204,7 +204,7 @@ model Asset {
   isFullyDepreciated    Boolean   @default(false) // True when book value <= salvage value
 
   // Declining Balance specific
-  depreciationRate Decimal? @db.Decimal(5, 4) // Rate for declining balance (e.g., 0.2000 for 20%)
+  depreciationRate Decimal? @db.Decimal(8, 4) // Rate for declining balance (e.g., 0.2000 for 20%)
 
   // Units of Production specific
   totalExpectedUnits  Int? // Total expected production units

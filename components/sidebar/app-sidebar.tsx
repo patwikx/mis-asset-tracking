@@ -2,14 +2,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Users,
-  Package,
-  Settings,
-  BarChart3,
-  FileText,
-  Shield,
-} from "lucide-react"
+import { Users, Package, Settings, ChartBar as BarChart3, FileText, Shield } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -66,6 +59,10 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
           title: "Categories",
           url: `/${businessUnitId}/assets/categories`,
         },
+        {
+          title: "Depreciation",
+          url: `/${businessUnitId}/depreciation`,
+        },
       ],
     },
     {
@@ -99,6 +96,10 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
         {
           title: "Deployment Reports",
           url: `/${businessUnitId}/reports/deployments`,
+        },
+        {
+          title: "Depreciation Reports",
+          url: `/${businessUnitId}/depreciation/reports`,
         },
         {
           title: "Audit Logs",

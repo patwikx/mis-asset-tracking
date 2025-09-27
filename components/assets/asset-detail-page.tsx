@@ -1,12 +1,13 @@
 // components/assets/asset-detail-page.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CreditCard as Edit, Trash2 } from 'lucide-react';
 import { DepreciationCard } from './depreciation/depreciation-card';
+import { BatchDepreciationDialog } from '../depreciation/batch-depreciation-dialog';
 import type { SerializedAssetWithRelations } from '@/lib/utils/serialization';
 import { DepreciationScheduleDialog } from './depreciation';
 
@@ -16,6 +17,7 @@ interface AssetDetailPageProps {
 }
 
 export function AssetDetailPage({ asset }: AssetDetailPageProps) {
+  const [showBatchDepreciation, setShowBatchDepreciation] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -54,6 +56,13 @@ export function AssetDetailPage({ asset }: AssetDetailPageProps) {
               View Schedule
             </Button>
           </DepreciationScheduleDialog>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowBatchDepreciation(true)}
+          >
+            Batch Calculate
+          </Button>
           <Button variant="outline" size="sm">
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
@@ -188,6 +197,16 @@ export function AssetDetailPage({ asset }: AssetDetailPageProps) {
           </CardContent>
         </Card>
       </div>
+
+      <BatchDepreciationDialog
+        open={showBatchDepreciation}
+        onOpenChange={setShowBatchDepreciation}
+        businessUnitId={asset.businessUnitId}
+        onSuccess={() => {
+          // Refresh the page or update local state
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

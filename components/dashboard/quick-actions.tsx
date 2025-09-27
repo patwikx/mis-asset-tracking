@@ -9,7 +9,8 @@ import {
   BarChart3, 
   Settings,
   PlusCircle,
-  ArrowRight
+  ArrowRight,
+  Calculator
 } from "lucide-react";
 import Link from 'next/link';
 
@@ -34,6 +35,13 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
       href: `/${businessUnitId}/assets/deploy`,
       icon: Package,
       variant: 'default'
+    },
+    {
+      title: "Depreciation",
+      description: "Manage asset depreciation",
+      href: `/${businessUnitId}/depreciation`,
+      icon: Calculator,
+      variant: 'outline'
     },
     {
       title: "View Employees",
