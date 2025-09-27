@@ -23,6 +23,7 @@ model BusinessUnit {
   assets         Asset[]
   deployments    AssetDeployment[]
   assetHistories AssetHistory[]
+  depreciations  AssetDepreciation[]
 
   @@map("business_units")
 }
@@ -126,6 +127,14 @@ model AssetCategory {
   @@map("asset_categories")
 }
 
+// Depreciation Methods
+enum DepreciationMethod {
+  STRAIGHT_LINE // (Cost - Salvage Value) / Useful Life
+  DECLINING_BALANCE // Declining Balance Method
+  UNITS_OF_PRODUCTION // Based on usage
+  SUM_OF_YEARS_DIGITS // Sum of Years Digits Method
+}
+
 // Asset Status
 enum AssetStatus {
   AVAILABLE
@@ -134,6 +143,7 @@ enum AssetStatus {
   RETIRED
   LOST
   DAMAGED
+  FULLY_DEPRECIATED // New status when asset is fully depreciated
 }
 
 // Asset History Actions
@@ -151,6 +161,7 @@ enum AssetHistoryAction {
   REPAIRED
   LOCATION_CHANGED
   UPDATED
+  DEPRECIATION_CALCULATED // New action for depreciation calculations
 }
 
 // Main Assets Table
@@ -163,7 +174,7 @@ model Asset {
   brand          String?
   specifications Json? // Store technical specs as JSON
   purchaseDate   DateTime?
-  purchasePrice  Decimal?    @db.Decimal(10, 2)
+  purchasePrice  Decimal?    @db.Decimal(12, 2) // Original cost
   warrantyExpiry DateTime?
   categoryId     String
   businessUnitId String
@@ -173,8 +184,35 @@ model Asset {
   notes          String?
   createdById    String
   isActive       Boolean     @default(true)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+
+  // === DEPRECIATION LAPSING FIELDS ===
+  // Depreciation Configuration
+  depreciationMethod DepreciationMethod? @default(STRAIGHT_LINE)
+  usefulLifeYears    Int? // Asset's useful life in years
+  usefulLifeMonths   Int? // More precise useful life in months
+  salvageValue       Decimal?            @default(0) @db.Decimal(12, 2) // Residual value at end of useful life
+
+  // Current Depreciation State
+  currentBookValue        Decimal? @db.Decimal(12, 2) // Current book value (Cost - Accumulated Depreciation)
+  accumulatedDepreciation Decimal  @default(0) @db.Decimal(12, 2) // Total depreciation to date
+
+  // Depreciation Tracking
+  depreciationStartDate DateTime? // When to start depreciation (usually purchase date)
+  lastDepreciationDate  DateTime? // Last time depreciation was calculated
+  nextDepreciationDate  DateTime? // Next scheduled depreciation calculation
+  monthlyDepreciation   Decimal?  @db.Decimal(12, 2) // Monthly depreciation amount
+  isFullyDepreciated    Boolean   @default(false) // True when book value <= salvage value
+
+  // Declining Balance specific
+  depreciationRate Decimal? @db.Decimal(5, 4) // Rate for declining balance (e.g., 0.2000 for 20%)
+
+  // Units of Production specific
+  totalExpectedUnits  Int? // Total expected production units
+  currentUnits        Int      @default(0) // Current production units
+  depreciationPerUnit Decimal? @db.Decimal(12, 6) // Depreciation per unit
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Current assignment info (denormalized for quick access)
   currentlyAssignedTo String? // Current employee ID if deployed
@@ -182,14 +220,66 @@ model Asset {
   lastAssignedDate    DateTime? // When it was last assigned
 
   // Relations
-  category           AssetCategory      @relation(fields: [categoryId], references: [id])
-  businessUnit       BusinessUnit       @relation(fields: [businessUnitId], references: [id])
-  createdBy          Employee           @relation("AssetCreator", fields: [createdById], references: [id])
-  deployments        AssetDeployment[]
-  assetHistories     AssetHistory[]
-  maintenanceRecords AssetMaintenance[]
+  category            AssetCategory       @relation(fields: [categoryId], references: [id])
+  businessUnit        BusinessUnit        @relation(fields: [businessUnitId], references: [id])
+  createdBy           Employee            @relation("AssetCreator", fields: [createdById], references: [id])
+  deployments         AssetDeployment[]
+  assetHistories      AssetHistory[]
+  maintenanceRecords  AssetMaintenance[]
+  depreciationHistory AssetDepreciation[] // Track depreciation over time
 
+  @@index([nextDepreciationDate]) // For batch depreciation processing
+  @@index([isFullyDepreciated, status]) // For filtering depreciated assets
+  @@index([depreciationMethod]) // For method-specific queries
   @@map("assets")
+}
+
+// Asset Depreciation History - Track depreciation calculations over time
+model AssetDepreciation {
+  id             String @id @default(uuid())
+  assetId        String
+  businessUnitId String
+
+  // Depreciation Period
+  depreciationDate DateTime // Date of this depreciation entry
+  periodStartDate  DateTime // Start of depreciation period
+  periodEndDate    DateTime // End of depreciation period
+
+  // Values for this period
+  bookValueStart          Decimal @db.Decimal(12, 2) // Book value at start of period
+  depreciationAmount      Decimal @db.Decimal(12, 2) // Depreciation for this period
+  bookValueEnd            Decimal @db.Decimal(12, 2) // Book value at end of period
+  accumulatedDepreciation Decimal @db.Decimal(12, 2) // Total accumulated depreciation after this period
+
+  // Method-specific data
+  method           DepreciationMethod
+  calculationBasis Json? // Store method-specific calculation details
+
+  // Units of Production specific
+  unitsStart    Int? // Units at start of period
+  unitsEnd      Int? // Units at end of period
+  unitsInPeriod Int? // Units produced in this period
+
+  // Adjustments and corrections
+  isAdjustment     Boolean  @default(false) // True if this is a manual adjustment
+  adjustmentReason String? // Reason for manual adjustment
+  originalAmount   Decimal? @db.Decimal(12, 2) // Original amount before adjustment
+
+  // Metadata
+  calculatedBy String? // System or Employee ID who calculated
+  calculatedAt DateTime @default(now())
+  notes        String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  asset        Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+
+  @@index([assetId, depreciationDate]) // For asset depreciation history
+  @@index([depreciationDate]) // For period-based queries
+  @@index([businessUnitId, depreciationDate]) // For business unit reporting
+  @@map("asset_depreciations")
 }
 
 // Asset Deployment Status
@@ -255,6 +345,11 @@ model AssetHistory {
   newStatus        AssetStatus? // Status after this action
   previousLocation String? // Location before this action
   newLocation      String? // Location after this action
+
+  // Depreciation specific fields
+  previousBookValue  Decimal? @db.Decimal(12, 2) // Book value before this action
+  newBookValue       Decimal? @db.Decimal(12, 2) // Book value after this action
+  depreciationAmount Decimal? @db.Decimal(12, 2) // Depreciation amount for this entry
 
   // Additional context
   notes    String? // Additional notes about this history entry
@@ -383,7 +478,7 @@ model Report {
   id             String   @id @default(uuid())
   name           String
   description    String?
-  type           String // ASSET_INVENTORY, DEPLOYMENT_SUMMARY, etc.
+  type           String // ASSET_INVENTORY, DEPLOYMENT_SUMMARY, DEPRECIATION_REPORT, etc.
   parameters     Json? // Report parameters as JSON
   data           Json // Report data as JSON
   generatedBy    String // Employee ID who generated the report
@@ -402,7 +497,7 @@ model Notification {
   recipientId String
   title       String
   message     String
-  type        String // APPROVAL_PENDING, RETURN_DUE, etc.
+  type        String // APPROVAL_PENDING, RETURN_DUE, DEPRECIATION_DUE, etc.
   relatedId   String? // ID of related record (deployment, asset, etc.)
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())

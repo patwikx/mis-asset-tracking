@@ -15,46 +15,67 @@ import {
 import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import type { AssetWithRelations } from '@/types/asset-types';
-import { deleteAsset } from '@/lib/actions/asset-actions';
 
 interface AssetDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   asset: AssetWithRelations | null;
   onSuccess: () => void;
+  // Add optional override props for non-asset usage
+  customTitle?: string;
+  customDescription?: string;
+  customItemName?: string;
+  customItemCode?: string;
+  customWarning?: string;
+  customOnDelete?: () => Promise<void>;
 }
 
 export const AssetDeleteDialog: React.FC<AssetDeleteDialogProps> = ({
   open,
   onOpenChange,
   asset,
-  onSuccess
+  onSuccess,
+  customTitle,
+  customDescription,
+  customItemName,
+  customItemCode,
+  customWarning,
+  customOnDelete
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (!asset) return;
-
     setIsLoading(true);
     try {
-      const result = await deleteAsset(asset.id);
-      
-      if (result.success) {
-        toast.success(result.message);
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        toast.error(result.message);
+      if (customOnDelete) {
+        await customOnDelete();
+      } else if (asset) {
+        const { deleteAsset } = await import('@/lib/actions/asset-actions');
+        const result = await deleteAsset(asset.id);
+        
+        if (result.success) {
+          toast.success(result.message);
+          onSuccess();
+          onOpenChange(false);
+        } else {
+          toast.error(result.message);
+        }
       }
     } catch (error) {
-      console.error('Error deleting asset:', error);
+      console.error('Error deleting:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!asset) return null;
+  const title = customTitle || 'Delete Asset';
+  const itemName = customItemName || asset?.description || '';
+  const itemCode = customItemCode || asset?.itemCode || '';
+  const description = customDescription || 'This action cannot be undone. The asset will be marked as inactive and will no longer appear in your asset list.';
+  const warning = customWarning || (asset?.deployments && asset.deployments.length > 0 ? 'This asset has deployment history. Make sure there are no active deployments before deleting.' : undefined);
+
+  if (!asset && !customOnDelete) return null;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -62,22 +83,20 @@ export const AssetDeleteDialog: React.FC<AssetDeleteDialogProps> = ({
         <AlertDialogHeader>
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-5 h-5 text-destructive" />
-            <AlertDialogTitle>Delete Asset</AlertDialogTitle>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="space-y-2">
             <p>
-              Are you sure you want to delete the asset <strong>{asset.description}</strong> 
-              ({asset.itemCode})?
+              Are you sure you want to delete <strong>{itemName}</strong>
+              {itemCode && ` (${itemCode})`}?
             </p>
             <p className="text-sm text-muted-foreground">
-              This action cannot be undone. The asset will be marked as inactive and 
-              will no longer appear in your asset list.
+              {description}
             </p>
-            {asset.deployments && asset.deployments.length > 0 && (
+            {warning && (
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Warning:</strong> This asset has deployment history. 
-                  Make sure there are no active deployments before deleting.
+                  <strong>Warning:</strong> {warning}
                 </p>
               </div>
             )}
@@ -93,7 +112,7 @@ export const AssetDeleteDialog: React.FC<AssetDeleteDialogProps> = ({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Delete Asset
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

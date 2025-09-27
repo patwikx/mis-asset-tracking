@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AssetsHeader } from '../assets-header';
 import { CategoriesTable } from './categories-table';
 import { CategoryFormDialog } from './category-form-dialog';
-import { AssetDeleteDialog } from '../asset-delete-dialog';
+
 import { AssetPagination } from '../asset-pagination';
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -16,6 +16,8 @@ import type {
   PaginatedResponse 
 } from '@/types/asset-types';
 import { getAssetCategories, deleteAssetCategory } from '@/lib/actions/asset-category-actions';
+import { AssetDeleteDialog } from '../asset-delete-dialog';
+
 
 export const CategoriesPage: React.FC = () => {
   const [categories, setCategories] = useState<AssetCategoryWithCounts[]>([]);
@@ -105,22 +107,18 @@ export const CategoriesPage: React.FC = () => {
     loadCategories();
   };
 
-  const handleDeleteSuccess = async () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedCategory) return;
 
-    try {
-      const result = await deleteAssetCategory(selectedCategory.id);
-      
-      if (result.success) {
-        toast.success(result.message);
-        loadCategories();
-        setShowDeleteDialog(false);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast.error('An unexpected error occurred');
+    const result = await deleteAssetCategory(selectedCategory.id);
+    
+    if (result.success) {
+      toast.success(result.message);
+      loadCategories();
+      setShowDeleteDialog(false);
+    } else {
+      toast.error(result.message);
+      throw new Error(result.message); // This will be caught by the GenericDeleteDialog
     }
   };
 
@@ -177,71 +175,25 @@ export const CategoriesPage: React.FC = () => {
         onSuccess={handleFormSuccess}
       />
 
-      {/* Reuse the AssetDeleteDialog but customize the content */}
-      {selectedCategory && (
-        <AssetDeleteDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          asset={{
-            id: selectedCategory.id,
-            description: `Category: ${selectedCategory.name}`,
-            itemCode: selectedCategory.code,
-            serialNumber: null,
-            modelNumber: null,
-            brand: null,
-            specifications: null,
-            purchaseDate: null,
-            purchasePrice: null,
-            warrantyExpiry: null,
-            categoryId: selectedCategory.id,
-            businessUnitId: '',
-            quantity: 1,
-            status: 'AVAILABLE' as const,
-            location: null,
-            notes: null,
-            createdById: '',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            currentlyAssignedTo: null,
-            currentDeploymentId: null,
-            lastAssignedDate: null,
-            deployments: [],
-            category: selectedCategory,
-            businessUnit: {
-              id: '',
-              name: '',
-              code: '',
-              description: null,
-              isActive: true,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            },
-            createdBy: {
-              id: '',
-              employeeId: '',
-              email: null,
-              passwordHash: '',
-              firstName: 'System',
-              lastName: 'User',
-              middleName: null,
-              position: null,
-              businessUnitId: '',
-              departmentId: '',
-              roleId: '',
-              isActive: true,
-              hireDate: null,
-              terminateDate: null,
-              emailVerified: null,
-              image: null,
-              lastLoginAt: null,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            }
-          }}
-          onSuccess={handleDeleteSuccess}
-        />
-      )}
+<AssetDeleteDialog
+  open={showDeleteDialog}
+  onOpenChange={setShowDeleteDialog}
+  asset={null} // Pass null since this isn't a real asset
+  onSuccess={() => {
+    loadCategories();
+    setShowDeleteDialog(false);
+  }}
+  customTitle="Delete Category"
+  customDescription="This action cannot be undone. The category will be permanently removed from the system."
+  customItemName={selectedCategory?.name || ''}
+  customItemCode={selectedCategory?.code}
+  customWarning={
+    selectedCategory && selectedCategory._count.assets > 0
+      ? `This category is assigned to ${selectedCategory._count.assets} asset(s). Make sure to reassign these assets to another category before deleting.`
+      : undefined
+  }
+  customOnDelete={handleDeleteConfirm}
+/>
     </div>
   );
 };

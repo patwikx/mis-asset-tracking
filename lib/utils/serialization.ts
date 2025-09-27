@@ -80,7 +80,16 @@ function convertDecimal(value: Decimal | null | undefined): number | null | unde
 export function serializeAsset(asset: Asset): SerializedAsset {
   return {
     ...asset,
+    // Original Decimal fields
     purchasePrice: convertDecimal(asset.purchasePrice),
+    
+    // New depreciation Decimal fields
+    salvageValue: convertDecimal(asset.salvageValue),
+    currentBookValue: convertDecimal(asset.currentBookValue),
+    accumulatedDepreciation: convertDecimal(asset.accumulatedDepreciation),
+    monthlyDepreciation: convertDecimal(asset.monthlyDepreciation),
+    depreciationRate: convertDecimal(asset.depreciationRate),
+    depreciationPerUnit: convertDecimal(asset.depreciationPerUnit),
   };
 }
 
@@ -90,7 +99,17 @@ export function serializeAsset(asset: Asset): SerializedAsset {
 export function serializeAssetWithRelations(asset: AssetWithRelations): SerializedAssetWithRelations {
   return {
     ...asset,
+    // Original Decimal fields
     purchasePrice: convertDecimal(asset.purchasePrice),
+    
+    // New depreciation Decimal fields
+    salvageValue: convertDecimal(asset.salvageValue),
+    currentBookValue: convertDecimal(asset.currentBookValue),
+    accumulatedDepreciation: convertDecimal(asset.accumulatedDepreciation),
+    monthlyDepreciation: convertDecimal(asset.monthlyDepreciation),
+    depreciationRate: convertDecimal(asset.depreciationRate),
+    depreciationPerUnit: convertDecimal(asset.depreciationPerUnit),
+    
     deployments: asset.deployments.map(deployment => serializeDeployment(deployment)),
   };
 }
@@ -120,7 +139,16 @@ export function serializeDeploymentWithRelations(
     ...deployment,
     asset: {
       ...deployment.asset,
+      // Original Decimal fields
       purchasePrice: convertDecimal(deployment.asset.purchasePrice),
+      
+      // New depreciation Decimal fields
+      salvageValue: convertDecimal(deployment.asset.salvageValue),
+      currentBookValue: convertDecimal(deployment.asset.currentBookValue),
+      accumulatedDepreciation: convertDecimal(deployment.asset.accumulatedDepreciation),
+      monthlyDepreciation: convertDecimal(deployment.asset.monthlyDepreciation),
+      depreciationRate: convertDecimal(deployment.asset.depreciationRate),
+      depreciationPerUnit: convertDecimal(deployment.asset.depreciationPerUnit),
     },
   };
 }
@@ -135,7 +163,16 @@ export function serializeDeploymentQueryResult(
     ...deployment,
     asset: {
       ...deployment.asset,
+      // Original Decimal fields
       purchasePrice: convertDecimal(deployment.asset.purchasePrice),
+      
+      // New depreciation Decimal fields
+      salvageValue: convertDecimal(deployment.asset.salvageValue),
+      currentBookValue: convertDecimal(deployment.asset.currentBookValue),
+      accumulatedDepreciation: convertDecimal(deployment.asset.accumulatedDepreciation),
+      monthlyDepreciation: convertDecimal(deployment.asset.monthlyDepreciation),
+      depreciationRate: convertDecimal(deployment.asset.depreciationRate),
+      depreciationPerUnit: convertDecimal(deployment.asset.depreciationPerUnit),
     },
   };
 }

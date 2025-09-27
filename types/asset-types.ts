@@ -1,13 +1,14 @@
 // types/asset-types.ts
-import { Asset, AssetCategory, AssetStatus, AssetDeployment, DeploymentStatus, Employee, BusinessUnit } from '@prisma/client';
+import { Asset, AssetCategory, AssetStatus, AssetDeployment, DeploymentStatus, Employee, BusinessUnit, Prisma } from '@prisma/client';
 
-export interface AssetWithRelations extends Asset {
-  category: AssetCategory;
-  businessUnit: BusinessUnit;
-  deployments: AssetDeployment[];
-  createdBy: Employee;
-}
-
+export type AssetWithRelations = Prisma.AssetGetPayload<{
+  include: {
+    category: true;
+    businessUnit: true;
+    deployments: true;
+    createdBy: true;
+  };
+}>;
 export interface AssetCategoryWithCounts extends AssetCategory {
   _count: {
     assets: number;
