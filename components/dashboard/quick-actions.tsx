@@ -7,7 +7,6 @@ import {
   Users, 
   FileText, 
   BarChart3, 
-  Settings,
   PlusCircle,
   ArrowRight,
   Calculator
@@ -32,7 +31,7 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
     {
       title: "Deploy Asset",
       description: "Assign an asset to an employee",
-      href: `/${businessUnitId}/assets/deploy`,
+      href: `/${businessUnitId}/assets/deployments`,
       icon: Package,
       variant: 'default'
     },
@@ -41,13 +40,6 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
       description: "Manage asset depreciation",
       href: `/${businessUnitId}/depreciation`,
       icon: Calculator,
-      variant: 'outline'
-    },
-    {
-      title: "View Employees",
-      description: "Browse employee directory",
-      href: `/${businessUnitId}/employees`,
-      icon: Users,
       variant: 'outline'
     },
     {
@@ -69,10 +61,10 @@ const getQuickActions = (businessUnitId: string, userRole: string): QuickAction[
   const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN'];
   if (adminRoles.includes(userRole)) {
     baseActions.push({
-      title: "System Settings",
-      description: "Manage system settings",
-      href: `/${businessUnitId}/admin/business-units`,
-      icon: Settings,
+      title: "View Employees",
+      description: "Browse employee directory",
+      href: `/${businessUnitId}/employees`,
+      icon: Users,
       variant: 'outline'
     });
   }

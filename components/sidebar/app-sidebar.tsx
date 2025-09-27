@@ -14,7 +14,6 @@ import type { BusinessUnitItem } from "@/types/business-unit-types"
 import type { Session } from "next-auth"
 import BusinessUnitSwitcher from "../business-unit-swticher"
 import { NavMain } from "./nav-main"
-import { NavProjects } from "./nav-projects"
 import { NavUser } from "./nav-user"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -94,16 +93,12 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
       icon: FileText,
       items: [
         {
-          title: "Asset Reports",
-          url: `/${businessUnitId}/reports/assets`,
-        },
-        {
-          title: "Deployment Reports",
-          url: `/${businessUnitId}/reports/deployments`,
+          title: "Asset & Deployment Reports",
+          url: `/${businessUnitId}/reports`,
         },
         {
           title: "Depreciation Reports",
-          url: `/${businessUnitId}/depreciation/reports`,
+          url: `/${businessUnitId}/reports/depreciation`,
         },
         {
           title: "Audit Logs",
@@ -140,7 +135,7 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
     items: [
       {
         title: "Profile",
-        url: `/${businessUnitId}/settings/profile`,
+        url: `/${businessUnitId}/profile`,
       },
       {
         title: "Preferences",
@@ -152,33 +147,7 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
   return baseItems
 }
 
-// Define quick action projects based on user role
-const getQuickActions = (businessUnitId: string, userRole: string) => {
-  const baseActions = [
-    {
-      name: "Asset Deployment",
-      url: `/${businessUnitId}/assets/deploy`,
-      icon: Package,
-    },
-    {
-      name: "Employee Directory",
-      url: `/${businessUnitId}/employees`,
-      icon: Users,
-    },
-  ]
 
-  // Add admin-specific quick actions
-  const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'SYSTEM_ADMIN']
-  if (adminRoles.includes(userRole)) {
-    baseActions.push({
-      name: "System Management",
-      url: `/${businessUnitId}/admin`,
-      icon: Settings,
-    })
-  }
-
-  return baseActions
-}
 
 export function AppSidebar({ 
   session, 
@@ -191,10 +160,7 @@ export function AppSidebar({
     [currentBusinessUnitId, session.user.role.code]
   )
 
-  const quickActions = React.useMemo(() => 
-    getQuickActions(currentBusinessUnitId, session.user.role.code),
-    [currentBusinessUnitId, session.user.role.code]
-  )
+
 
   const userData = React.useMemo(() => ({
     name: session.user.name,
@@ -216,7 +182,6 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navItems} />
-        <NavProjects projects={quickActions} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

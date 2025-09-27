@@ -77,7 +77,7 @@ export function ReportsPage({ businessUnitId }: ReportsPageProps) {
   };
 
   const handleReportClick = (reportId: string) => {
-    router.push(`/dashboard/${businessUnitId}/reports/${reportId}`);
+    router.push(`/${businessUnitId}/reports/${reportId}`);
   };
 
   return (

@@ -11,7 +11,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Hop as Home, Package, Users, FileText, ChartBar as BarChart3, Settings, Building2, Shield, FolderOpen, UserCheck, Activity } from 'lucide-react';
+import { Package, Users, FileText, ChartBar as BarChart3, Settings, Building2, Shield, FolderOpen, UserCheck, Activity, Home } from 'lucide-react';
 
 interface DynamicBreadcrumbsProps {
   businessUnitId: string;
