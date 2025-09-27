@@ -13,6 +13,12 @@ import {
   getDepreciationDashboardData,
   batchCalculateDepreciation,
 } from '@/lib/actions/depreciation-reports-actions';
+import { 
+  getDepreciationReportData, 
+  generateDepreciationExcel, 
+  generateDepreciationCSV 
+} from '@/lib/actions/depreciation-export-actions';
+import { generateDepreciationPDF } from '@/lib/utils/pdf-generator';
 import type {
   DepreciationSummaryData,
   DepreciationAlert
@@ -46,7 +52,7 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
- const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await getDepreciationDashboardData(businessUnitId);
@@ -85,54 +91,36 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
   const handleExportReport = async (format: 'PDF' | 'EXCEL' | 'CSV') => {
     setIsExporting(true);
     try {
-      // Generate a full report first
-      const reportResult = await getDepreciationDashboardData(businessUnitId);
-      
-      if (!reportResult) {
-        toast.error('Failed to generate report data');
-        return;
-      }
-
-      // Create a proper report data structure
-      const reportData = {
-        reportId: `DEP-${Date.now()}`,
-        businessUnitId,
-        generatedAt: new Date(),
-        generatedBy: 'System User',
-        reportPeriod: {
-          startDate: new Date(new Date().getFullYear(), 0, 1),
-          endDate: new Date()
-        },
-        summary: reportResult.summary,
-        assetDetails: [], // Would need to be populated from actual asset data
-        methodBreakdown: [],
-        categoryBreakdown: []
-      };
-
-      let result;
-      const { generateDepreciationPDF, generateDepreciationExcel, generateDepreciationCSV } = await import('@/lib/actions/depreciation-export-actions');
-      
-      switch (format) {
-        case 'PDF':
-          result = await generateDepreciationPDF(reportData);
-          break;
-        case 'EXCEL':
-          result = await generateDepreciationExcel(reportData);
-          break;
-        case 'CSV':
-          result = await generateDepreciationCSV(reportData);
-          break;
-        default:
-          throw new Error('Unsupported format');
-      }
-      
-      if (result.success) {
-        toast.success(result.message);
-        if (result.downloadUrl) {
-          window.open(result.downloadUrl, '_blank');
+      if (format === 'PDF') {
+        // For PDF, get the full report data and use client-side generation
+        const result = await getDepreciationReportData(businessUnitId);
+        
+        if (result.success && result.data) {
+          generateDepreciationPDF(result.data);
+          toast.success('PDF exported successfully');
+        } else {
+          toast.error(result.message);
         }
       } else {
-        toast.error(result.message);
+        // For Excel and CSV, use server-side generation
+        let result;
+        switch (format) {
+          case 'EXCEL':
+            result = await generateDepreciationExcel(businessUnitId);
+            break;
+          case 'CSV':
+            result = await generateDepreciationCSV(businessUnitId);
+            break;
+        }
+        
+        if (result && result.success) {
+          toast.success(result.message);
+          if (result.downloadUrl) {
+            window.open(result.downloadUrl, '_blank');
+          }
+        } else {
+          toast.error(result?.message || 'Export failed');
+        }
       }
     } catch (error) {
       console.error('Error exporting report:', error);
@@ -206,7 +194,11 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
             onClick={() => handleExportReport('PDF')}
             disabled={isExporting}
           >
-            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             Export PDF
           </Button>
           <Button 
@@ -214,7 +206,11 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
             onClick={() => handleExportReport('EXCEL')}
             disabled={isExporting}
           >
-            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             Export Excel
           </Button>
           <Button 
@@ -498,6 +494,7 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
               variant="outline" 
               className="h-16 flex-col"
               onClick={loadDashboardData}
+              disabled={isLoading}
             >
               <RefreshCw className="h-4 w-4 mb-1" />
               <span className="text-xs">Refresh Data</span>

@@ -11,7 +11,8 @@ import {
   Printer, 
   FileText, 
   BarChart3,
-  Package
+  Package,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { DepreciationReportData } from '@/types/depreciation-reports-types';
@@ -20,12 +21,14 @@ interface DepreciationReportViewerProps {
   report: DepreciationReportData;
   onExport: (format: 'PDF' | 'EXCEL' | 'CSV') => void;
   onPrint: () => void;
+  isExporting?: boolean;
 }
 
 export function DepreciationReportViewer({ 
   report, 
   onExport, 
-  onPrint 
+  onPrint,
+  isExporting = false
 }: DepreciationReportViewerProps) {
   const { summary, assetDetails, methodBreakdown, categoryBreakdown } = report;
 
@@ -69,17 +72,48 @@ export function DepreciationReportViewer({
           </p>
         </div>
         <div className="flex space-x-2 print:hidden">
-          <Button variant="outline" size="sm" onClick={onPrint}>
+          <Button variant="outline" size="sm" onClick={onPrint} disabled={isExporting}>
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
-          <Button variant="outline" size="sm" onClick={() => onExport('PDF')}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onExport('PDF')}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={() => onExport('EXCEL')}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onExport('EXCEL')}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onExport('CSV')}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            CSV
           </Button>
         </div>
       </div>

@@ -12,21 +12,21 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { DepreciationReportViewer } from './depreciation-report-viewer';
-import { generateDepreciationReport } from '@/lib/actions/depreciation-reports-actions';
-import { generateDepreciationPDF, generateDepreciationExcel, generateDepreciationCSV } from '@/lib/actions/depreciation-export-actions';
+import { getDepreciationReportData, generateDepreciationExcel, generateDepreciationCSV } from '@/lib/actions/depreciation-export-actions';
+import { generateDepreciationPDF } from '@/lib/utils/pdf-generator';
 import type { DepreciationReportData } from '@/types/depreciation-reports-types';
 
 interface DepreciationReportsPageProps {
   businessUnitId: string;
+  businessUnitName?: string;
 }
 
-export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsPageProps) {
+export function DepreciationReportsPage({ businessUnitId, businessUnitName }: DepreciationReportsPageProps) {
   const [startDate, setStartDate] = useState<Date | undefined>(
     new Date(new Date().getFullYear(), 0, 1) // Start of current year
   );
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [isGenerating, setIsGenerating] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isExporting, setIsExporting] = useState(false);
   const [currentReport, setCurrentReport] = useState<DepreciationReportData | null>(null);
 
@@ -38,10 +38,13 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
 
     setIsGenerating(true);
     try {
-      const result = await generateDepreciationReport(businessUnitId, startDate, endDate);
+      const result = await getDepreciationReportData(businessUnitId, {
+        startDate,
+        endDate
+      });
       
-      if (result.success && result.report) {
-        setCurrentReport(result.report);
+      if (result.success && result.data) {
+        setCurrentReport(result.data);
         toast.success(result.message);
       } else {
         toast.error(result.message);
@@ -55,36 +58,38 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
   };
 
   const handleExport = async (format: 'PDF' | 'EXCEL' | 'CSV') => {
+    if (!currentReport) {
+      toast.error('Please generate a report first');
+      return;
+    }
+
     setIsExporting(true);
     try {
-      if (!currentReport) {
-        toast.error('Please generate a report first');
-        return;
-      }
-
       let result;
+      
       switch (format) {
         case 'PDF':
-          result = await generateDepreciationPDF(currentReport);
-          break;
+          // Use client-side PDF generation with business unit name
+          generateDepreciationPDF(currentReport, businessUnitName);
+          toast.success('PDF exported successfully');
+          return;
         case 'EXCEL':
-          result = await generateDepreciationExcel(currentReport);
+          result = await generateDepreciationExcel(businessUnitId);
           break;
         case 'CSV':
-          result = await generateDepreciationCSV(currentReport);
+          result = await generateDepreciationCSV(businessUnitId);
           break;
         default:
           throw new Error('Unsupported format');
       }
       
-      if (result.success) {
+      if (result && result.success) {
         toast.success(result.message);
         if (result.downloadUrl) {
-          // Trigger download
           window.open(result.downloadUrl, '_blank');
         }
       } else {
-        toast.error(result.message);
+        toast.error(result?.message || 'Export failed');
       }
     } catch (error) {
       console.error('Error exporting report:', error);
@@ -100,23 +105,162 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
       return;
     }
 
-    // Add print styles
+    // Enhanced print styles matching PDF design
     const printStyles = `
       <style>
         @media print {
-          body * { visibility: hidden; }
-          #depreciation-report, #depreciation-report * { visibility: visible; }
-          #depreciation-report { position: absolute; left: 0; top: 0; width: 100%; }
+          @page {
+            size: A4 landscape;
+            margin: 5mm;
+          }
+          
+          body * { 
+            visibility: hidden; 
+          }
+          
+          #depreciation-report, #depreciation-report * { 
+            visibility: visible; 
+          }
+          
+          #depreciation-report { 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            width: 100%;
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.2;
+          }
+
+          /* Header styles matching PDF */
+          .print-header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+
+          .print-company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+
+          .print-report-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 12px;
+          }
+
+          .print-report-date {
+            font-size: 10pt;
+            font-weight: normal;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+          }
+
+          /* Summary section */
+          .print-summary {
+            margin-bottom: 20px;
+          }
+
+          .print-summary-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+          }
+
+          .print-summary-table {
+            width: 200px;
+            border-collapse: collapse;
+          }
+
+          .print-summary-table td {
+            padding: 2px 5px;
+            border: none;
+          }
+
+          .print-summary-table td:first-child {
+            width: 120px;
+            text-align: left;
+          }
+
+          .print-summary-table td:last-child {
+            width: 80px;
+            text-align: right;
+          }
+
+          /* Asset details section */
+          .print-details {
+            margin-top: 20px;
+          }
+
+          .print-details-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+          }
+
+          .print-details-line {
+            border-bottom: 0.3px solid black;
+            margin-bottom: 8px;
+          }
+
+          .print-assets-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+          }
+
+          .print-assets-table th {
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: center;
+            padding: 3px;
+            border: none;
+          }
+
+          .print-assets-table td {
+            padding: 3px;
+            border: none;
+            vertical-align: top;
+          }
+
+          .print-assets-table .col-code { width: 10%; text-align: left; }
+          .print-assets-table .col-desc { width: 20%; text-align: left; }
+          .print-assets-table .col-category { width: 11%; text-align: left; }
+          .print-assets-table .col-purchase { width: 13%; text-align: right; }
+          .print-assets-table .col-current { width: 13%; text-align: right; }
+          .print-assets-table .col-accumulated { width: 13%; text-align: right; }
+          .print-assets-table .col-monthly { width: 13%; text-align: right; }
+          .print-assets-table .col-method { width: 7%; text-align: center; }
+
+          /* Footer */
+          .print-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 5mm;
+            right: 5mm;
+            border-top: 0.3px solid black;
+            padding-top: 8px;
+            font-size: 8pt;
+          }
+
+          .print-footer-left {
+            float: left;
+          }
+
+          .print-footer-right {
+            float: right;
+          }
+
+          /* Hide elements that shouldn't print */
           .print\\:hidden { display: none !important; }
+          .no-print { display: none !important; }
+          
+          /* Show print-only elements */
           .print\\:block { display: block !important; }
-          .print\\:text-center { text-align: center !important; }
-          .print\\:mb-6 { margin-bottom: 1.5rem !important; }
-          .print\\:mt-8 { margin-top: 2rem !important; }
-          .print\\:shadow-none { box-shadow: none !important; }
-          .print\\:border-2 { border-width: 2px !important; }
-          .print\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-          .print\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-          .print\\:space-y-4 > * + * { margin-top: 1rem !important; }
+          .print\\:inline-block { display: inline-block !important; }
+          .print\\:table { display: table !important; }
         }
       </style>
     `;
@@ -131,6 +275,55 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
       document.head.innerHTML = head;
     }, 1000);
   };
+
+  const handleQuickReport = async (type: 'current-year' | 'previous-year' | 'current-quarter') => {
+    let newStartDate: Date;
+    let newEndDate: Date;
+
+    switch (type) {
+      case 'current-year':
+        const currentYear = new Date().getFullYear();
+        newStartDate = new Date(currentYear, 0, 1);
+        newEndDate = new Date(currentYear, 11, 31);
+        break;
+      case 'previous-year':
+        const lastYear = new Date().getFullYear() - 1;
+        newStartDate = new Date(lastYear, 0, 1);
+        newEndDate = new Date(lastYear, 11, 31);
+        break;
+      case 'current-quarter':
+        const currentDate = new Date();
+        newStartDate = new Date(currentDate.getFullYear(), Math.floor(currentDate.getMonth() / 3) * 3, 1);
+        newEndDate = currentDate;
+        break;
+    }
+
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+
+    // Generate report immediately
+    setIsGenerating(true);
+    try {
+      const result = await getDepreciationReportData(businessUnitId, {
+        startDate: newStartDate,
+        endDate: newEndDate
+      });
+      
+      if (result.success && result.data) {
+        setCurrentReport(result.data);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate depreciation report');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const displayName = businessUnitName || 'COMPANY NAME';
 
   return (
     <div className="space-y-6">
@@ -228,13 +421,111 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
         </CardContent>
       </Card>
 
-      {/* Report Viewer */}
+      {/* Report Viewer with Print Structure */}
       {currentReport && (
-        <DepreciationReportViewer
-          report={currentReport}
-          onExport={handleExport}
-          onPrint={handlePrint}
-        />
+        <div id="depreciation-report">
+          {/* Print-only header */}
+          <div className="print:block hidden print-header">
+            <div className="print-company-name">{displayName.toUpperCase()}</div>
+            <div className="print-report-title">ASSET DEPRECIATION REPORT</div>
+            <div className="print-report-date">
+              AS OF {new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: '2-digit' 
+              }).toUpperCase()}
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="print-summary">
+            <div className="print-summary-title print:block hidden">SUMMARY</div>
+            <table className="print-summary-table print:table hidden">
+              <tbody>
+                <tr>
+                  <td>Total Assets</td>
+                  <td>{currentReport.summary.totalAssets.toString()}</td>
+                </tr>
+                <tr>
+                  <td>Total Original Value</td>
+                  <td>PHP {currentReport.summary.totalOriginalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td>Total Current Book Value</td>
+                  <td>PHP {currentReport.summary.totalCurrentBookValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td>Total Accumulated Depreciation</td>
+                  <td>PHP {currentReport.summary.totalAccumulatedDepreciation.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td>Depreciation Rate</td>
+                  <td>{currentReport.summary.depreciationRate.toFixed(2)}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Asset Details Section */}
+          <div className="print-details">
+            <div className="print-details-title print:block hidden">ASSET DETAILS</div>
+            <div className="print-details-line print:block hidden"></div>
+            
+            <table className="print-assets-table print:table hidden">
+              <thead>
+                <tr>
+                  <th className="col-code">Item Code</th>
+                  <th className="col-desc">Description</th>
+                  <th className="col-category">Category</th>
+                  <th className="col-purchase">Purchase Price</th>
+                  <th className="col-current">Current Value</th>
+                  <th className="col-accumulated">Accumulated Dep.</th>
+                  <th className="col-monthly">Monthly Dep.</th>
+                  <th className="col-method">Method</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentReport.assetDetails.map((asset, index) => (
+                  <tr key={index}>
+                    <td className="col-code">{asset.itemCode}</td>
+                    <td className="col-desc">
+                      {asset.description.length > 30 ? 
+                        asset.description.substring(0, 30) + '...' : 
+                        asset.description
+                      }
+                    </td>
+                    <td className="col-category">{asset.category}</td>
+                    <td className="col-purchase">PHP {asset.purchasePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td className="col-current">PHP {asset.currentBookValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td className="col-accumulated">PHP {asset.accumulatedDepreciation.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td className="col-monthly">PHP {asset.monthlyDepreciation.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td className="col-method">{asset.depreciationMethod.replace('_', ' ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Print-only footer */}
+          <div className="print-footer print:block hidden">
+            <div className="print-footer-left">
+              Generated: {new Date().toLocaleString()}
+            </div>
+            <div className="print-footer-right">
+              Period: {currentReport.reportPeriod.startDate.toLocaleDateString()} - {currentReport.reportPeriod.endDate.toLocaleDateString()}
+            </div>
+          </div>
+
+          {/* Screen version - your existing DepreciationReportViewer */}
+          <div className="print:hidden">
+            <DepreciationReportViewer
+              report={currentReport}
+              onExport={handleExport}
+              onPrint={handlePrint}
+              isExporting={isExporting}
+            />
+          </div>
+        </div>
       )}
 
       {/* Quick Report Templates */}
@@ -248,12 +539,7 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => {
-                  const currentYear = new Date().getFullYear();
-                  setStartDate(new Date(currentYear, 0, 1));
-                  setEndDate(new Date(currentYear, 11, 31));
-                  setTimeout(handleGenerateReport, 100);
-                }}
+                onClick={() => handleQuickReport('current-year')}
                 disabled={isGenerating}
               >
                 <FileText className="h-6 w-6 mb-2" />
@@ -263,12 +549,7 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => {
-                  const lastYear = new Date().getFullYear() - 1;
-                  setStartDate(new Date(lastYear, 0, 1));
-                  setEndDate(new Date(lastYear, 11, 31));
-                  setTimeout(handleGenerateReport, 100);
-                }}
+                onClick={() => handleQuickReport('previous-year')}
                 disabled={isGenerating}
               >
                 <FileText className="h-6 w-6 mb-2" />
@@ -278,13 +559,7 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
               <Button
                 variant="outline"
                 className="h-20 flex-col"
-                onClick={() => {
-                  const currentDate = new Date();
-                  const quarterStart = new Date(currentDate.getFullYear(), Math.floor(currentDate.getMonth() / 3) * 3, 1);
-                  setStartDate(quarterStart);
-                  setEndDate(currentDate);
-                  setTimeout(handleGenerateReport, 100);
-                }}
+                onClick={() => handleQuickReport('current-quarter')}
                 disabled={isGenerating}
               >
                 <FileText className="h-6 w-6 mb-2" />

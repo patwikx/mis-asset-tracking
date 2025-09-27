@@ -54,6 +54,7 @@ export interface DepreciationMethodBreakdown {
   totalOriginalValue: number;
   totalCurrentValue: number;
   totalDepreciation: number;
+  totalAccumulatedDepreciation: number;
   averageDepreciationRate: number;
 }
 
