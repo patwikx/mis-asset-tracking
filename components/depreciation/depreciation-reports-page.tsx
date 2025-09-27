@@ -12,7 +12,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { DepreciationReportViewer } from './depreciation-report-viewer';
-import { generateDepreciationReport, exportDepreciationReport } from '@/lib/actions/depreciation-reports-actions';
+import { generateDepreciationReport } from '@/lib/actions/depreciation-reports-actions';
+import { generateDepreciationPDF, generateDepreciationExcel, generateDepreciationCSV } from '@/lib/actions/depreciation-export-actions';
 import type { DepreciationReportData } from '@/types/depreciation-reports-types';
 
 interface DepreciationReportsPageProps {
@@ -54,23 +55,34 @@ export function DepreciationReportsPage({ businessUnitId }: DepreciationReportsP
   };
 
   const handleExport = async (format: 'PDF' | 'EXCEL' | 'CSV') => {
-    if (!currentReport) {
-      toast.error('Please generate a report first');
-      return;
-    }
-
     setIsExporting(true);
     try {
-      const result = await exportDepreciationReport(businessUnitId, format, {
-        startDate,
-        endDate,
-        includeSummary: true,
-        includeSchedule: true,
-        includeHistory: false
-      });
+      if (!currentReport) {
+        toast.error('Please generate a report first');
+        return;
+      }
+
+      let result;
+      switch (format) {
+        case 'PDF':
+          result = await generateDepreciationPDF(currentReport);
+          break;
+        case 'EXCEL':
+          result = await generateDepreciationExcel(currentReport);
+          break;
+        case 'CSV':
+          result = await generateDepreciationCSV(currentReport);
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
       
       if (result.success) {
         toast.success(result.message);
+        if (result.downloadUrl) {
+          // Trigger download
+          window.open(result.downloadUrl, '_blank');
+        }
       } else {
         toast.error(result.message);
       }

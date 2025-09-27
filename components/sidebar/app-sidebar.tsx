@@ -63,6 +63,10 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
           title: "Depreciation",
           url: `/${businessUnitId}/depreciation`,
         },
+        {
+          title: "Maintenance",
+          url: `/${businessUnitId}/maintenance`,
+        },
       ],
     },
     {

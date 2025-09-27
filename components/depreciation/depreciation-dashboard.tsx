@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { 
   getDepreciationDashboardData,
   batchCalculateDepreciation,
-  exportDepreciationReport
 } from '@/lib/actions/depreciation-reports-actions';
 import type {
   DepreciationSummaryData,
@@ -86,16 +85,52 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
   const handleExportReport = async (format: 'PDF' | 'EXCEL' | 'CSV') => {
     setIsExporting(true);
     try {
-      const result = await exportDepreciationReport(businessUnitId, format, {
-        includeSummary: true,
-        includeSchedule: true,
-        includeHistory: false
-      });
+      // Generate a full report first
+      const reportResult = await getDepreciationDashboardData(businessUnitId);
+      
+      if (!reportResult) {
+        toast.error('Failed to generate report data');
+        return;
+      }
+
+      // Create a proper report data structure
+      const reportData = {
+        reportId: `DEP-${Date.now()}`,
+        businessUnitId,
+        generatedAt: new Date(),
+        generatedBy: 'System User',
+        reportPeriod: {
+          startDate: new Date(new Date().getFullYear(), 0, 1),
+          endDate: new Date()
+        },
+        summary: reportResult.summary,
+        assetDetails: [], // Would need to be populated from actual asset data
+        methodBreakdown: [],
+        categoryBreakdown: []
+      };
+
+      let result;
+      const { generateDepreciationPDF, generateDepreciationExcel, generateDepreciationCSV } = await import('@/lib/actions/depreciation-export-actions');
+      
+      switch (format) {
+        case 'PDF':
+          result = await generateDepreciationPDF(reportData);
+          break;
+        case 'EXCEL':
+          result = await generateDepreciationExcel(reportData);
+          break;
+        case 'CSV':
+          result = await generateDepreciationCSV(reportData);
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
       
       if (result.success) {
         toast.success(result.message);
-        // In a real implementation, you would trigger the download here
-        // window.open(result.downloadUrl, '_blank');
+        if (result.downloadUrl) {
+          window.open(result.downloadUrl, '_blank');
+        }
       } else {
         toast.error(result.message);
       }

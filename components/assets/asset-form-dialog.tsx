@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, Loader as Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -202,9 +202,11 @@ export const AssetFormDialog: React.FC<AssetFormDialogProps> = ({
 
       let result;
       if (isEditing) {
+        // For editing, include the asset ID and keep the original category
         result = await updateAsset({
           id: asset.id,
-          ...submitData
+          ...submitData,
+          categoryId: asset.categoryId, // Override with original category
         } as UpdateAssetData);
       } else {
         // For new assets, let the server generate the item code
