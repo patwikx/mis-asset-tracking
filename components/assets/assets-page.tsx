@@ -24,7 +24,6 @@ export const AssetsPage: React.FC = () => {
   const router = useRouter();
   const [assets, setAssets] = useState<AssetWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(null);
@@ -59,8 +58,7 @@ export const AssetsPage: React.FC = () => {
   }, [loadAssets]);
 
   const handleCreateNew = () => {
-    setSelectedAsset(null);
-    setShowCreateDialog(true);
+    router.push(`/${businessUnitId}/assets/create`);
   };
 
   const handleView = (asset: AssetWithRelations) => {
@@ -142,13 +140,6 @@ export const AssetsPage: React.FC = () => {
           onLimitChange={handleLimitChange}
         />
       )}
-
-      <AssetFormDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        asset={null}
-        onSuccess={handleFormSuccess}
-      />
 
       <AssetFormDialog
         open={showEditDialog}

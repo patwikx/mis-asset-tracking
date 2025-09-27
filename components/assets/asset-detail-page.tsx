@@ -5,11 +5,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
-import type { AssetWithRelations } from '@/types/asset-types';
+import { CreditCard as Edit, Trash2 } from 'lucide-react';
+import { DepreciationCard } from './depreciation/depreciation-card';
+import type { SerializedAssetWithRelations } from '@/lib/utils/serialization';
+import { DepreciationScheduleDialog } from './depreciation';
 
 interface AssetDetailPageProps {
-  asset: AssetWithRelations;
+  asset: SerializedAssetWithRelations; // Change this to expect already serialized data
   businessUnitId: string;
 }
 
@@ -44,6 +46,14 @@ export function AssetDetailPage({ asset }: AssetDetailPageProps) {
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
+          <DepreciationScheduleDialog 
+            assetId={asset.id}
+            assetDescription={asset.description}
+          >
+            <Button variant="outline" size="sm">
+              View Schedule
+            </Button>
+          </DepreciationScheduleDialog>
           <Button variant="outline" size="sm">
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
@@ -142,6 +152,14 @@ export function AssetDetailPage({ asset }: AssetDetailPageProps) {
             </div>
           </CardContent>
         </Card>
+
+        <DepreciationCard 
+          asset={asset} 
+          onDepreciationCalculated={() => {
+            // Refresh the page or update local state
+            window.location.reload();
+          }}
+        />
 
         <Card>
           <CardHeader>

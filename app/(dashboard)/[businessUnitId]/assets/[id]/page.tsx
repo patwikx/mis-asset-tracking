@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { redirect, notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getAssetById } from '@/lib/actions/asset-actions';
+import { serializeAssetWithRelations } from '@/lib/utils/serialization';
 import { AssetDetailPage } from '@/components/assets/asset-detail-page';
 
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ interface AssetDetailPageProps {
 
 export default async function AssetDetail({ params }: AssetDetailPageProps) {
   const session = await auth();
-  
+ 
   if (!session?.user) {
     redirect('/auth/sign-in');
   }
@@ -29,7 +30,7 @@ export default async function AssetDetail({ params }: AssetDetailPageProps) {
 
   try {
     const asset = await getAssetById(id);
-    
+   
     if (!asset) {
       notFound();
     }
@@ -39,9 +40,12 @@ export default async function AssetDetail({ params }: AssetDetailPageProps) {
       notFound();
     }
 
+    // Serialize the asset data before passing to client component
+    const serializedAsset = serializeAssetWithRelations(asset);
+
     return (
-      <AssetDetailPage 
-        asset={asset} 
+      <AssetDetailPage
+        asset={serializedAsset}
         businessUnitId={businessUnitId}
       />
     );

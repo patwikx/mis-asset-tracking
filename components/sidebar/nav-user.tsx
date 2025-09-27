@@ -2,6 +2,8 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   BadgeCheck,
   Bell,
@@ -61,6 +63,8 @@ function getUserInitials(name: string): string {
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
   const { setTheme } = useTheme()
+  const pathname = usePathname()
+  const businessUnitId = pathname.split('/')[1]
 
   const handleSignOut = React.useCallback(async () => {
     try {
@@ -145,9 +149,11 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem asChild>
+                <Link href={`/${businessUnitId}/profile`}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />

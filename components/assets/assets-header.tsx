@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Download, Filter } from "lucide-react";
+import { Plus, RefreshCw, Download, ListFilter as Filter } from "lucide-react";
 
 interface AssetsHeaderProps {
   title: string;
