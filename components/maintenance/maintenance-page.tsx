@@ -30,7 +30,9 @@ export function MaintenancePage() {
   const [activeTab, setActiveTab] = useState<'records' | 'schedule'>('records');
   
   const [filters, setFilters] = useState<MaintenanceFilters>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [paginationInfo, setPaginationInfo] = useState({
     page: 1,
     limit: 10,
