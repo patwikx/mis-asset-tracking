@@ -59,43 +59,51 @@ export function BatchDepreciationDialog({
   const [result, setResult] = useState<BatchDepreciationResult | null>(null);
 
   const loadAssetsDue = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const assets = await getAssetsDueForDepreciation(businessUnitId);
-      
-      // Transform the serialized data to match our interface
-      const transformedAssets: AssetDueForDepreciation[] = assets.map(asset => ({
-        id: asset.id,
-        itemCode: asset.itemCode,
-        description: asset.description,
-        currentBookValue: asset.currentBookValue 
-          ? (typeof asset.currentBookValue === 'number' 
-             ? asset.currentBookValue 
-             : asset.currentBookValue.toNumber())
-          : (asset.purchasePrice 
-             ? (typeof asset.purchasePrice === 'number' 
-                ? asset.purchasePrice 
-                : asset.purchasePrice.toNumber())
-             : 0),
-        nextDepreciationDate: new Date(asset.nextDepreciationDate || new Date()),
-        monthlyDepreciation: asset.monthlyDepreciation 
-          ? (typeof asset.monthlyDepreciation === 'number'
-             ? asset.monthlyDepreciation
-             : asset.monthlyDepreciation.toNumber())
-          : 0
-      }));
-      
-      setAssetsDue(transformedAssets);
-      // Select all assets by default
-      setSelectedAssets(new Set(transformedAssets.map(asset => asset.id)));
-    } catch (error) {
-      console.error('Error loading assets due for depreciation:', error);
-      toast.error('Failed to load assets');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [businessUnitId]);
+  try {
+    setIsLoading(true);
+    const assets = await getAssetsDueForDepreciation(businessUnitId);
+    
+    // Helper function to safely convert to number
+    const toNumber = (value: unknown): number => {
+      if (typeof value === 'number') {
+        return value;
+      }
+      if (value && typeof value === 'object' && 'toNumber' in value && typeof value.toNumber === 'function') {
+        return (value as { toNumber(): number }).toNumber();
+      }
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    };
 
+    // Transform the serialized data to match our interface
+    const transformedAssets: AssetDueForDepreciation[] = assets.map(asset => ({
+      id: asset.id,
+      itemCode: asset.itemCode,
+      description: asset.description,
+      currentBookValue: asset.currentBookValue 
+        ? toNumber(asset.currentBookValue)
+        : (asset.purchasePrice 
+           ? toNumber(asset.purchasePrice)
+           : 0),
+      nextDepreciationDate: new Date(asset.nextDepreciationDate || new Date()),
+      monthlyDepreciation: asset.monthlyDepreciation 
+        ? toNumber(asset.monthlyDepreciation)
+        : 0
+    }));
+    
+    setAssetsDue(transformedAssets);
+    // Select all assets by default
+    setSelectedAssets(new Set(transformedAssets.map(asset => asset.id)));
+  } catch (error) {
+    console.error('Error loading assets due for depreciation:', error);
+    toast.error('Failed to load assets');
+  } finally {
+    setIsLoading(false);
+  }
+}, [businessUnitId]);
   useEffect(() => {
     if (open) {
       loadAssetsDue();

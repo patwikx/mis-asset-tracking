@@ -93,8 +93,12 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
       icon: FileText,
       items: [
         {
-          title: "Asset & Deployment Reports",
+          title: "Reports Dashboard",
           url: `/${businessUnitId}/reports`,
+        },
+                {
+          title: "Asset Reports",
+          url: `/${businessUnitId}/reports/assets`,
         },
         {
           title: "Depreciation Reports",
