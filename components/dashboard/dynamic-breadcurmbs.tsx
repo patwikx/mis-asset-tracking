@@ -11,7 +11,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Package, Users, FileText, ChartBar as BarChart3, Settings, Building2, Shield, FolderOpen, UserCheck, Activity, Home } from 'lucide-react';
+import { Package, Users, FileText, ChartBar as BarChart3, Settings, Building2, Shield, FolderOpen, UserCheck, Activity, Home, Calculator, Wrench, Calendar, Plus, Eye, UserPlus } from 'lucide-react';
 
 interface DynamicBreadcrumbsProps {
   businessUnitId: string;
@@ -30,7 +30,9 @@ const routeConfig: Record<string, { label: string; icon?: React.ComponentType<{ 
   'assets/categories': { label: 'Categories', icon: FolderOpen },
   'assets/deployments': { label: 'Deployments', icon: Package },
   'assets/deployments/create': { label: 'Create Deployment', icon: Package },
+  'assets/create': { label: 'Create Asset', icon: Plus },
   'employees': { label: 'Employees', icon: Users },
+  'employees/create': { label: 'Create Employee', icon: UserPlus },
   'departments': { label: 'Departments', icon: Building2 },
   'roles': { label: 'Roles', icon: Shield },
   'reports': { label: 'Reports', icon: FileText },
@@ -41,9 +43,13 @@ const routeConfig: Record<string, { label: string; icon?: React.ComponentType<{ 
   'system-settings': { label: 'System Settings', icon: Settings },
   'admin': { label: 'Administration', icon: Settings },
   'admin/business-units': { label: 'Business Units', icon: Building2 },
+  'depreciation': { label: 'Depreciation', icon: Calculator },
+  'maintenance': { label: 'Maintenance', icon: Wrench },
+  'profile': { label: 'Profile', icon: UserCheck },
   'settings': { label: 'Settings', icon: Settings },
   'settings/profile': { label: 'Profile', icon: UserCheck },
   'settings/preferences': { label: 'Preferences', icon: Settings },
+  'depreciation-schedule': { label: 'Depreciation Schedule', icon: Calendar },
 };
 
 export function DynamicBreadcrumbs({ businessUnitId }: DynamicBreadcrumbsProps) {
@@ -62,40 +68,55 @@ export function DynamicBreadcrumbs({ businessUnitId }: DynamicBreadcrumbsProps) 
 
     // Skip the business unit ID segment (index 0)
     let currentPath = '';
+    let actualPath = ''; // Track the actual path with UUIDs for href generation
+    
     for (let i = 1; i < pathSegments.length; i++) {
       const segment = pathSegments[i];
       
-      // Build the current path
-      if (currentPath) {
-        currentPath += `/${segment}`;
-      } else {
-        currentPath = segment;
-      }
+      // Build the actual path (including UUIDs)
+      actualPath = actualPath ? `${actualPath}/${segment}` : segment;
       
       // Check if this is a dynamic route (UUID pattern)
       const isUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
       
       if (isUuidPattern) {
-        // For detail pages, use the parent route's label + "Details"
-        const parentPath = currentPath.replace(`/${segment}`, '');
+        // For UUID segments, use the parent route's label + "Details"
+        const parentPath = currentPath;
         const parentConfig = routeConfig[parentPath];
         
         breadcrumbs.push({
           label: parentConfig ? `${parentConfig.label} Details` : 'Details',
-          icon: parentConfig?.icon,
+          href: i === pathSegments.length - 1 ? undefined : `/${businessUnitId}/${actualPath}`,
+          icon: parentConfig?.icon || Eye,
           isCurrentPage: i === pathSegments.length - 1
         });
       } else {
-        // Regular route
-        const config = routeConfig[currentPath];
-        const isLastSegment = i === pathSegments.length - 1;
+        // For non-UUID segments, build the currentPath for config lookup
+        currentPath = currentPath ? `${currentPath}/${segment}` : segment;
         
-        breadcrumbs.push({
-          label: config?.label || segment.charAt(0).toUpperCase() + segment.slice(1),
-          href: isLastSegment ? undefined : `/${businessUnitId}/${currentPath}`,
-          icon: config?.icon,
-          isCurrentPage: isLastSegment
-        });
+        // Special handling for depreciation-schedule under assets/[id]
+        if (segment === 'depreciation-schedule' && currentPath.includes('assets')) {
+          const config = routeConfig['depreciation-schedule'];
+          const isLastSegment = i === pathSegments.length - 1;
+          
+          breadcrumbs.push({
+            label: config?.label || 'Depreciation Schedule',
+            href: isLastSegment ? undefined : `/${businessUnitId}/${actualPath}`,
+            icon: config?.icon || Calendar,
+            isCurrentPage: isLastSegment
+          });
+        } else {
+          // Regular route
+          const config = routeConfig[currentPath];
+          const isLastSegment = i === pathSegments.length - 1;
+          
+          breadcrumbs.push({
+            label: config?.label || segment.charAt(0).toUpperCase() + segment.slice(1),
+            href: isLastSegment ? undefined : `/${businessUnitId}/${actualPath}`,
+            icon: config?.icon,
+            isCurrentPage: isLastSegment
+          });
+        }
       }
     }
 

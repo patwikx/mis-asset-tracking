@@ -96,9 +96,13 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
           title: "Reports Dashboard",
           url: `/${businessUnitId}/reports`,
         },
-                {
+        {
           title: "Asset Reports",
           url: `/${businessUnitId}/reports/assets`,
+        },
+        {
+          title: "Deployment Reports",
+          url: `/${businessUnitId}/reports/deployments`,
         },
         {
           title: "Depreciation Reports",

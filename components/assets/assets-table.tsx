@@ -5,14 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Package,
-  Calendar,
-} from "lucide-react";
+import { MoveHorizontal as MoreHorizontal, Trash2, Eye, Package, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +65,6 @@ const getStatusText = (status: AssetStatus): string => {
 export const AssetsTable: React.FC<AssetsTableProps> = ({
   assets,
   onView,
-  onEdit,
   onDelete,
   isLoading = false
 }) => {
@@ -185,10 +177,6 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({
                               <Eye className="w-4 h-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEdit(asset)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => onDelete(asset)}
                               className="text-destructive"
@@ -229,10 +217,6 @@ export const AssetsTable: React.FC<AssetsTableProps> = ({
                         <DropdownMenuItem onClick={() => onView(asset)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(asset)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => onDelete(asset)}

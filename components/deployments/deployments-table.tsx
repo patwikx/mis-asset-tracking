@@ -5,17 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Eye, 
-  CheckCircle,
-  XCircle,
-  RotateCcw,
-  Calendar,
-  User,
-  Package
-} from "lucide-react";
+import { MoveHorizontal as MoreHorizontal, CreditCard as Edit, Eye, CircleCheck as CheckCircle, Circle as XCircle, RotateCcw, Calendar, User, Package } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -126,6 +116,7 @@ export const DeploymentsTable: React.FC<DeploymentsTableProps> = ({
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium">Transmittal #</th>
                     <th className="text-left py-3 px-4 font-medium">Asset</th>
                     <th className="text-left py-3 px-4 font-medium">Employee</th>
                     <th className="text-left py-3 px-4 font-medium">Status</th>
@@ -137,6 +128,9 @@ export const DeploymentsTable: React.FC<DeploymentsTableProps> = ({
                 <tbody>
                   {deployments.map((deployment) => (
                     <tr key={deployment.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-4">
+                        <p className="font-mono text-sm">{deployment.transmittalNumber}</p>
+                      </td>
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium">{deployment.asset.description}</p>
@@ -240,6 +234,9 @@ export const DeploymentsTable: React.FC<DeploymentsTableProps> = ({
                     <div className="flex-1">
                       <h3 className="font-medium">{deployment.asset.description}</h3>
                       <p className="text-sm text-muted-foreground">{deployment.asset.itemCode}</p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        Transmittal: {deployment.transmittalNumber}
+                      </p>
                       <div className="flex items-center space-x-2 mt-1">
                         <User className="w-3 h-3" />
                         <span className="text-xs text-muted-foreground">
@@ -293,6 +290,10 @@ export const DeploymentsTable: React.FC<DeploymentsTableProps> = ({
                       <Badge className={getStatusColor(deployment.status)}>
                         {getStatusText(deployment.status)}
                       </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Transmittal:</span>
+                      <span className="text-sm font-mono">{deployment.transmittalNumber}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Category:</span>

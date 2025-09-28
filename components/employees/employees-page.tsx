@@ -26,7 +26,6 @@ export const EmployeesPage: React.FC = () => {
   const router = useRouter();
   const [employees, setEmployees] = useState<EmployeeWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
@@ -62,8 +61,7 @@ export const EmployeesPage: React.FC = () => {
   }, [loadEmployees]);
 
   const handleCreateNew = () => {
-    setSelectedEmployee(null);
-    setShowCreateDialog(true);
+    router.push(`/${businessUnitId}/employees/create`);
   };
 
   const handleView = (employee: EmployeeWithRelations) => {
@@ -150,12 +148,6 @@ export const EmployeesPage: React.FC = () => {
         />
       )}
 
-      <EmployeeFormDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        employee={null}
-        onSuccess={handleFormSuccess}
-      />
 
       <EmployeeFormDialog
         open={showEditDialog}

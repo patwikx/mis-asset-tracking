@@ -134,8 +134,8 @@ export function DeploymentDetailPage({
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Deployment ID</label>
-                <p className="mt-1 font-mono text-sm">{deployment.id}</p>
+                <label className="text-sm font-medium text-muted-foreground">Transmittal #</label>
+                <p className="mt-1 font-mono text-sm">{deployment.transmittalNumber}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created Date</label>

@@ -11,20 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { 
-  Save, 
-  X, 
-  Edit, 
-  Trash2, 
-  Calendar as CalendarIcon, 
-  Calculator,
-  DollarSign,
-  Package,
-  Building,
-  User,
-  Clock,
-  FileText
-} from 'lucide-react';
+import { Save, X, CreditCard as Edit, Trash2, Calendar as CalendarIcon, Calculator, DollarSign, Package, Building, User, Clock, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -32,7 +19,7 @@ import { AssetStatus, DepreciationMethod } from '@prisma/client';
 import { updateAsset, getAssetCategories } from '@/lib/actions/asset-actions';
 import { DepreciationCard } from './depreciation/depreciation-card';
 import { BatchDepreciationDialog } from '../depreciation/batch-depreciation-dialog';
-import { DepreciationScheduleDialog } from './depreciation';
+import { useRouter } from 'next/navigation';
 import type { SerializedAssetWithRelations } from '@/lib/utils/serialization';
 
 interface AssetDetailPageProps {
@@ -63,6 +50,7 @@ interface EditFormData {
 }
 
 export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showBatchDepreciation, setShowBatchDepreciation] = useState(false);
@@ -215,15 +203,14 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              <DepreciationScheduleDialog 
-                assetId={asset.id}
-                assetDescription={asset.description}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push(`/${businessUnitId}/assets/${asset.id}/depreciation-schedule`)}
               >
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Schedule
-                </Button>
-              </DepreciationScheduleDialog>
+                <FileText className="h-4 w-4 mr-2" />
+                View Schedule
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -360,6 +347,22 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
                 )}
               </div>
 
+              {!asset.purchasePrice || !asset.usefulLifeMonths ? (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                    <strong>Depreciation Not Configured:</strong> This asset is missing depreciation configuration.
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-3">
+                    Purchase price and useful life are required for depreciation tracking.
+                  </p>
+                  {isEditing && (
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      You can configure depreciation settings below while editing.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+              
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 {isEditing ? (
@@ -720,7 +723,7 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
               {asset.deployments.slice(0, 10).map((deployment) => (
                 <div key={deployment.id} className="flex justify-between items-center p-3 border rounded">
                   <div>
-                    <p className="font-medium">Deployment #{deployment.id.slice(-8)}</p>
+                    <p className="font-medium">Transmittal: {deployment.transmittalNumber}</p>
                     <p className="text-sm text-muted-foreground">
                       Status: {deployment.status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                     </p>
