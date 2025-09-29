@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, BarChart3, PieChart, Calendar } from 'lucide-react';
 import { getAnalyticsData } from '@/lib/actions/analytics-actions';
 import type { AnalyticsData } from '@/types/report-types';
+import { toast } from 'sonner';
 
 interface AnalyticsPageProps {
   businessUnitId: string;
@@ -28,7 +29,7 @@ export function AnalyticsPage({ businessUnitId }: AnalyticsPageProps) {
       const data = await getAnalyticsData(businessUnitId);
       setAnalyticsData(data);
     } catch (error) {
-      console.error('Error loading analytics data:', error);
+      toast.error(`Error loading analytics data: ${error}`)
     } finally {
       setLoading(false);
     }

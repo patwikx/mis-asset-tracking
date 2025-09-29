@@ -97,8 +97,8 @@ export function BatchDepreciationDialog({
     setAssetsDue(transformedAssets);
     // Select all assets by default
     setSelectedAssets(new Set(transformedAssets.map(asset => asset.id)));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('Error loading assets due for depreciation:', error);
     toast.error('Failed to load assets');
   } finally {
     setIsLoading(false);
@@ -162,8 +162,8 @@ export function BatchDepreciationDialog({
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error in batch calculation:', error);
       toast.error('Failed to process batch depreciation');
     } finally {
       setIsProcessing(false);

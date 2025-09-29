@@ -49,8 +49,8 @@ export function DeploymentReportsPage({ businessUnitId, businessUnitName }: Depl
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error generating report:', error);
       toast.error('Failed to generate deployment report');
     } finally {
       setIsGenerating(false);
@@ -90,8 +90,8 @@ export function DeploymentReportsPage({ businessUnitId, businessUnitName }: Depl
       } else {
         toast.error(result?.message || 'Export failed');
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error exporting report:', error);
       toast.error('Failed to export report');
     } finally {
       setIsExporting(false);
@@ -303,8 +303,8 @@ export function DeploymentReportsPage({ businessUnitId, businessUnitName }: Depl
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error generating report:', error);
       toast.error('Failed to generate deployment report');
     } finally {
       setIsGenerating(false);

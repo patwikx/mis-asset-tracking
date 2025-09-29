@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/audit-logs/audit-logs-page.tsx
 'use client';
 
@@ -48,7 +49,6 @@ export function AuditLogsPage({ businessUnitId }: AuditLogsPageProps) {
       setAuditLogs(result.data);
       setPaginationInfo(result.pagination);
     } catch (error) {
-      console.error('Error loading audit logs:', error);
       toast.error('Failed to load audit logs');
     } finally {
       setIsLoading(false);
@@ -60,7 +60,7 @@ export function AuditLogsPage({ businessUnitId }: AuditLogsPageProps) {
       const statsData = await getAuditLogStats(businessUnitId);
       setStats(statsData);
     } catch (error) {
-      console.error('Error loading audit log stats:', error);
+      toast.error(`Error loading audit log stats: ${error}`)
     }
   }, [businessUnitId]);
 

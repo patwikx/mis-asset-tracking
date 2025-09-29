@@ -37,6 +37,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { toast } from "sonner"
 
 interface NavUserProps {
   user: {
@@ -73,7 +74,7 @@ export function NavUser({ user }: NavUserProps) {
         redirect: true 
       })
     } catch (error) {
-      console.error('Sign out error:', error)
+      toast.error(`Sign out error: ${error}`)
     }
   }, [])
 

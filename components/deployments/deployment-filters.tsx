@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { DeploymentStatus } from '@prisma/client';
 import type { DeploymentFilters } from '@/types/asset-types';
 import { getEmployees } from '@/lib/actions/deployment-actions';
+import { toast } from 'sonner';
 
 interface DeploymentFiltersProps {
   filters: DeploymentFilters;
@@ -76,7 +77,7 @@ export const DeploymentFiltersComponent: React.FC<DeploymentFiltersProps> = ({
       const employeesData = await getEmployees();
       setEmployees(employeesData);
     } catch (error) {
-      console.error('Error loading filter data:', error);
+      toast.error(`Error loading filter data: ${error}`)
     }
   };
 

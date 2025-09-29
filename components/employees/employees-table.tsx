@@ -7,13 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   MoreHorizontal, 
-  Edit, 
   Trash2, 
   Eye, 
   Users,
   Calendar,
-  Mail,
-  Shield
+  Mail
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,18 +25,14 @@ import type { EmployeeWithRelations } from '@/types/employee-types';
 interface EmployeesTableProps {
   employees: EmployeeWithRelations[];
   onView: (employee: EmployeeWithRelations) => void;
-  onEdit: (employee: EmployeeWithRelations) => void;
   onDelete: (employee: EmployeeWithRelations) => void;
-  onManagePermissions?: (employee: EmployeeWithRelations) => void;
   isLoading?: boolean;
 }
 
 export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   employees,
   onView,
-  onEdit,
   onDelete,
-  onManagePermissions,
   isLoading = false
 }) => {
   if (isLoading) {
@@ -146,16 +140,6 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
                               <Eye className="w-4 h-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEdit(employee)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            {onManagePermissions && (
-                              <DropdownMenuItem onClick={() => onManagePermissions(employee)}>
-                                <Shield className="w-4 h-4 mr-2" />
-                                Manage Permissions
-                              </DropdownMenuItem>
-                            )}
                             <DropdownMenuItem 
                               onClick={() => onDelete(employee)}
                               className="text-destructive"
@@ -200,16 +184,6 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(employee)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        {onManagePermissions && (
-                          <DropdownMenuItem onClick={() => onManagePermissions(employee)}>
-                            <Shield className="w-4 h-4 mr-2" />
-                            Manage Permissions
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem 
                           onClick={() => onDelete(employee)}
                           className="text-destructive"

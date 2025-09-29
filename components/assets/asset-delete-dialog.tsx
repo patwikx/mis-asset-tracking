@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/asset-delete-dialog.tsx
 'use client'
 
@@ -62,7 +63,6 @@ export const AssetDeleteDialog: React.FC<AssetDeleteDialogProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error deleting:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

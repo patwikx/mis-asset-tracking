@@ -6,6 +6,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Download } from "lucide-react";
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface DashboardHeaderProps {
   userName: string;
@@ -25,7 +26,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   const handleExport = () => {
     // TODO: Implement dashboard export functionality
-    console.log('Export dashboard data');
+    toast.success('Export dashboard data coming soon...')
   };
 
   return (

@@ -91,8 +91,8 @@ export const SystemSettingFormDialog: React.FC<SystemSettingFormDialogProps> = (
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

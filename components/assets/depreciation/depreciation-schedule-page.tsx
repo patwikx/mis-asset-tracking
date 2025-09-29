@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/depreciation-schedule-page.tsx
 'use client';
 
@@ -33,7 +34,6 @@ export function DepreciationSchedulePage({ asset, businessUnitId }: Depreciation
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error loading depreciation schedule:', error);
       toast.error('Failed to load depreciation schedule');
     } finally {
       setIsLoading(false);

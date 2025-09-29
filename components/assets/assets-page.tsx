@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/assets-page.tsx
 'use client'
 
@@ -5,7 +6,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AssetsHeader } from './assets-header';
 import { AssetsTable } from './assets-table';
-import { AssetFormDialog } from './asset-form-dialog';
 import { AssetDeleteDialog } from './asset-delete-dialog';
 import { AssetFiltersComponent } from './asset-filters';
 import { AssetPagination } from './asset-pagination';
@@ -24,7 +24,6 @@ export const AssetsPage: React.FC = () => {
   const router = useRouter();
   const [assets, setAssets] = useState<AssetWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(null);
   
@@ -46,7 +45,6 @@ export const AssetsPage: React.FC = () => {
       setAssets(result.data);
       setPaginationInfo(result.pagination);
     } catch (error) {
-      console.error('Error loading assets:', error);
       toast.error('Failed to load assets');
     } finally {
       setIsLoading(false);
@@ -63,11 +61,6 @@ export const AssetsPage: React.FC = () => {
 
   const handleView = (asset: AssetWithRelations) => {
     router.push(`/${businessUnitId}/assets/${asset.id}`);
-  };
-
-  const handleEdit = (asset: AssetWithRelations) => {
-    setSelectedAsset(asset);
-    setShowEditDialog(true);
   };
 
   const handleDelete = (asset: AssetWithRelations) => {
@@ -128,7 +121,6 @@ export const AssetsPage: React.FC = () => {
       <AssetsTable
         assets={assets}
         onView={handleView}
-        onEdit={handleEdit}
         onDelete={handleDelete}
         isLoading={isLoading}
       />
@@ -140,13 +132,6 @@ export const AssetsPage: React.FC = () => {
           onLimitChange={handleLimitChange}
         />
       )}
-
-      <AssetFormDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        asset={selectedAsset}
-        onSuccess={handleFormSuccess}
-      />
 
       <AssetDeleteDialog
         open={showDeleteDialog}

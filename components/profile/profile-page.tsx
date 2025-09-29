@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { getUserAssignedAssets, getUserProfile } from '@/lib/actions/profile-actions';
 import type { UserProfile, AssignedAsset } from '@/types/profile-types';
 import type { Session } from 'next-auth';
+import { toast } from 'sonner';
 
 interface ProfilePageProps {
   businessUnitId: string;
@@ -40,7 +41,7 @@ export function ProfilePage({ businessUnitId, user }: ProfilePageProps) {
       setProfile(profileData);
       setAssignedAssets(assetsData);
     } catch (error) {
-      console.error('Error loading profile data:', error);
+      toast.error(`Error loading profile data: ${error}`)
     } finally {
       setIsLoading(false);
     }

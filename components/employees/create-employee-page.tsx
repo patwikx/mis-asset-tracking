@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/employees/create-employee-page.tsx
 'use client';
 
@@ -68,7 +69,6 @@ export function CreateEmployeePage({ businessUnitId }: CreateEmployeePageProps) 
       setRoles(rolesData);
       setBusinessUnits(businessUnitsData);
     } catch (error) {
-      console.error('Error loading form data:', error);
       toast.error('Failed to load form data');
     }
   }, [businessUnitId]);
@@ -109,7 +109,6 @@ export function CreateEmployeePage({ businessUnitId }: CreateEmployeePageProps) 
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error creating employee:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

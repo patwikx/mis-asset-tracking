@@ -44,8 +44,8 @@ export const RolesPage: React.FC = () => {
       const result: PaginatedResponse<RoleWithCounts> = await getRoles(filters, pagination);
       setRoles(result.data);
       setPaginationInfo(result.pagination);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading roles:', error);
       toast.error('Failed to load roles');
     } finally {
       setIsLoading(false);

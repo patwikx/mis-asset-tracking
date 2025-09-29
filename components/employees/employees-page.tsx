@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/employees/employees-page.tsx
 'use client'
 
@@ -16,9 +17,8 @@ import { EmployeesHeader } from './employees-header';
 import { EmployeeFiltersComponent } from './employee-filters';
 import { EmployeesTable } from './employees-table';
 import { EmployeePagination } from './employee-pagination';
-import { EmployeeFormDialog } from './employee-form-dialog';
 import { EmployeeDeleteDialog } from './employee-delete-dialog';
-import { EmployeePermissionsDialog } from './employee-permissions-dialog';
+
 
 
 export const EmployeesPage: React.FC = () => {
@@ -26,9 +26,7 @@ export const EmployeesPage: React.FC = () => {
   const router = useRouter();
   const [employees, setEmployees] = useState<EmployeeWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithRelations | null>(null);
   
   const [filters, setFilters] = useState<EmployeeFilters>({});
@@ -49,7 +47,6 @@ export const EmployeesPage: React.FC = () => {
       setEmployees(result.data);
       setPaginationInfo(result.pagination);
     } catch (error) {
-      console.error('Error loading employees:', error);
       toast.error('Failed to load employees');
     } finally {
       setIsLoading(false);
@@ -68,20 +65,12 @@ export const EmployeesPage: React.FC = () => {
     router.push(`/${businessUnitId}/employees/${employee.id}`);
   };
 
-  const handleEdit = (employee: EmployeeWithRelations) => {
-    setSelectedEmployee(employee);
-    setShowEditDialog(true);
-  };
-
   const handleDelete = (employee: EmployeeWithRelations) => {
     setSelectedEmployee(employee);
     setShowDeleteDialog(true);
   };
 
-  const handleManagePermissions = (employee: EmployeeWithRelations) => {
-    setSelectedEmployee(employee);
-    setShowPermissionsDialog(true);
-  };
+ 
   const handleRefresh = () => {
     loadEmployees();
   };
@@ -134,9 +123,7 @@ export const EmployeesPage: React.FC = () => {
       <EmployeesTable
         employees={employees}
         onView={handleView}
-        onEdit={handleEdit}
         onDelete={handleDelete}
-        onManagePermissions={handleManagePermissions}
         isLoading={isLoading}
       />
 
@@ -148,24 +135,9 @@ export const EmployeesPage: React.FC = () => {
         />
       )}
 
-
-      <EmployeeFormDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        employee={selectedEmployee}
-        onSuccess={handleFormSuccess}
-      />
-
       <EmployeeDeleteDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        employee={selectedEmployee}
-        onSuccess={handleFormSuccess}
-      />
-
-      <EmployeePermissionsDialog
-        open={showPermissionsDialog}
-        onOpenChange={setShowPermissionsDialog}
         employee={selectedEmployee}
         onSuccess={handleFormSuccess}
       />

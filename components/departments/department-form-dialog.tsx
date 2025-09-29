@@ -93,8 +93,8 @@ export const DepartmentFormDialog: React.FC<DepartmentFormDialogProps> = ({
           businessUnitId: ''
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading form data:', error);
       toast.error('Failed to load form data');
     }
   };

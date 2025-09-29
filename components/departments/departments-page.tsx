@@ -51,8 +51,8 @@ export const DepartmentsPage: React.FC = () => {
       const result: PaginatedResponse<DepartmentWithRelations> = await getDepartments(filtersWithBusinessUnit, pagination);
       setDepartments(result.data);
       setPaginationInfo(result.pagination);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading departments:', error);
       toast.error('Failed to load departments');
     } finally {
       setIsLoading(false);

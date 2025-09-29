@@ -49,8 +49,8 @@ export function DepreciationReportsPage({ businessUnitId, businessUnitName }: De
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error generating report:', error);
       toast.error('Failed to generate depreciation report');
     } finally {
       setIsGenerating(false);
@@ -91,8 +91,8 @@ export function DepreciationReportsPage({ businessUnitId, businessUnitName }: De
       } else {
         toast.error(result?.message || 'Export failed');
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error exporting report:', error);
       toast.error('Failed to export report');
     } finally {
       setIsExporting(false);
@@ -315,8 +315,8 @@ export function DepreciationReportsPage({ businessUnitId, businessUnitName }: De
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error generating report:', error);
       toast.error('Failed to generate depreciation report');
     } finally {
       setIsGenerating(false);

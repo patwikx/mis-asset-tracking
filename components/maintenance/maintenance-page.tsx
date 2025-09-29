@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/maintenance/maintenance-page.tsx
 'use client';
 
@@ -30,9 +31,7 @@ export function MaintenancePage() {
   const [activeTab, setActiveTab] = useState<'records' | 'schedule'>('records');
   
   const [filters, setFilters] = useState<MaintenanceFilters>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [paginationInfo, setPaginationInfo] = useState({
     page: 1,
     limit: 10,
@@ -54,7 +53,6 @@ export function MaintenancePage() {
       setPaginationInfo(recordsResult.pagination);
       setSchedule(scheduleResult);
     } catch (error) {
-      console.error('Error loading maintenance data:', error);
       toast.error('Failed to load maintenance data');
     } finally {
       setIsLoading(false);

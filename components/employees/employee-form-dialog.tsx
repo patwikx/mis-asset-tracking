@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/employees/employee-form-dialog.tsx
 'use client'
 
@@ -138,7 +139,6 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
         });
       }
     } catch (error) {
-      console.error('Error loading form data:', error);
       toast.error('Failed to load form data');
     }
   };
@@ -180,7 +180,6 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

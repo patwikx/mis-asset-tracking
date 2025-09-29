@@ -19,7 +19,6 @@ import { AssetStatus } from '@prisma/client';
 interface AssetsTableProps {
   assets: AssetWithRelations[];
   onView: (asset: AssetWithRelations) => void;
-  onEdit: (asset: AssetWithRelations) => void;
   onDelete: (asset: AssetWithRelations) => void;
   isLoading?: boolean;
 }

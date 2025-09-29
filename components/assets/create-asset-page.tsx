@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/create-asset-page.tsx
 'use client';
 
@@ -88,7 +89,6 @@ export function CreateAssetPage({ businessUnitId }: CreateAssetPageProps) {
       const categoriesData = await getAssetCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading categories:', error);
       toast.error('Failed to load categories');
     }
   }, []);
@@ -101,7 +101,6 @@ export function CreateAssetPage({ businessUnitId }: CreateAssetPageProps) {
       const nextCode = await getNextItemCode(businessUnitId, formData.categoryId);
       setFormData(prev => ({ ...prev, itemCode: nextCode }));
     } catch (error) {
-      console.error('Error generating item code:', error);
       toast.error('Failed to generate item code');
       setFormData(prev => ({ ...prev, itemCode: 'Error generating code' }));
     } finally {
@@ -222,7 +221,6 @@ export function CreateAssetPage({ businessUnitId }: CreateAssetPageProps) {
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error creating asset:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

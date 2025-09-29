@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit, Users, Building } from 'lucide-react';
 import type { DepartmentWithRelations } from '@/types/department-types';
+import { toast } from 'sonner';
 
 interface DepartmentDetailPageProps {
   department: DepartmentWithRelations;
@@ -19,7 +20,7 @@ export function DepartmentDetailPage({ department }: DepartmentDetailPageProps) 
 
   const handleEdit = () => {
     // TODO: Implement edit functionality
-    console.log('Edit department:', department.id);
+    toast.success('Edot department coming soon...')
   };
 
   return (

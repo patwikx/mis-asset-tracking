@@ -71,8 +71,8 @@ export const DeploymentApprovalDialog: React.FC<DeploymentApprovalDialogProps> =
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error(`Error ${action}ing deployment:`, error);
       toast.error(`Failed to ${action} deployment`);
     } finally {
       setIsLoading(false);

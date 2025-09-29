@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/categories/category-form-dialog.tsx
 'use client'
 
@@ -96,7 +97,6 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

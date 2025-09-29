@@ -9,6 +9,7 @@ import { Search, Filter, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { SystemSettingFilters } from '@/types/system-settings-types';
 import { getSystemSettingCategories } from '@/lib/actions/system-settings-actions';
+import { toast } from 'sonner';
 
 interface SystemSettingFiltersComponentProps {
   filters: SystemSettingFilters;
@@ -32,7 +33,7 @@ export const SystemSettingFiltersComponent: React.FC<SystemSettingFiltersCompone
       const categoriesData = await getSystemSettingCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading filter options:', error);
+      toast.error(`Error loading filter options: ${error}`)
     }
   };
 

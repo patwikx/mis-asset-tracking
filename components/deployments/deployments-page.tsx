@@ -31,6 +31,7 @@ import { getEmployees } from '@/lib/actions/employee-actions';
 import { getAssets } from '@/lib/actions/asset-actions';
 import { DeploymentApprovalDialog } from './deployment-approval-dialog';
 import type { AssetDeploymentWithRelations, DeploymentFilters } from '@/types/asset-types';
+import { toast } from 'sonner';
 
 interface DeploymentsPageProps {
   businessUnitId: string;
@@ -69,7 +70,7 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
       const result = await getDeployments(businessUnitId, filters);
       setDeployments(result.data || []);
     } catch (error) {
-      console.error('Error loading deployments:', error);
+      toast.error(`Error loading deployments: ${error}`)
       setDeployments([]);
     } finally {
       setLoading(false);
@@ -87,7 +88,7 @@ export function DeploymentsPage({ businessUnitId }: DeploymentsPageProps) {
       setEmployees(employeesResult.data || []);
       setAssets(assetsResult.data || []);
     } catch (error) {
-      console.error('Error loading filter options:', error);
+      toast.error(`Error loading filter options: ${error}`)
     } finally {
       setFiltersLoading(false);
     }

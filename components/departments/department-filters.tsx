@@ -9,6 +9,7 @@ import { Search, Filter, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { DepartmentFilters } from '@/types/department-types';
 import { getBusinessUnits } from '@/lib/actions/department-actions';
+import { toast } from 'sonner';
 
 interface DepartmentFiltersComponentProps {
   filters: DepartmentFilters;
@@ -32,7 +33,7 @@ export const DepartmentFiltersComponent: React.FC<DepartmentFiltersComponentProp
       const businessUnitsData = await getBusinessUnits();
       setBusinessUnits(businessUnitsData);
     } catch (error) {
-      console.error('Error loading filter options:', error);
+      toast.error(`Error loading filter options: ${error}`)
     }
   };
 

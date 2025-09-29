@@ -20,6 +20,7 @@ import {
 import type { EmployeeFilters } from '@/types/employee-types';
 import { getDepartments, getRoles } from '@/lib/actions/employee-actions';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import { toast } from 'sonner';
 
 interface EmployeeFiltersComponentProps {
   filters: EmployeeFilters;
@@ -50,7 +51,7 @@ export const EmployeeFiltersComponent: React.FC<EmployeeFiltersComponentProps> =
       setDepartments(departmentsData);
       setRoles(rolesData);
     } catch (error) {
-      console.error('Error loading filter options:', error);
+      toast.error(`${error}. Error loading filter options.`)
     }
   };
 

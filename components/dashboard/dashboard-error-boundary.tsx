@@ -5,6 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { toast } from 'sonner';
 
 interface DashboardErrorBoundaryProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export class DashboardErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Dashboard error:', error, errorInfo);
+    toast.error(`Dashboard error: ${error}, ${errorInfo}`)
   }
 
   handleRetry = () => {

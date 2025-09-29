@@ -10,6 +10,7 @@ import { Search, Filter, FileText, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getReports, createReport } from '@/lib/actions/report-actions';
 import type { Report, ReportFilters, ReportType } from '@/types/report-types';
+import { toast } from 'sonner';
 
 interface ReportsPageProps {
   businessUnitId: string;
@@ -33,7 +34,7 @@ export function ReportsPage({ businessUnitId }: ReportsPageProps) {
       const result = await getReports(businessUnitId, filters);
       setReports(result.data);
     } catch (error) {
-      console.error('Error loading reports:', error);
+      toast.error(`Error loading reports: ${error}`)
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ export function ReportsPage({ businessUnitId }: ReportsPageProps) {
       await createReport(reportData);
       loadReports(); // Refresh the list
     } catch (error) {
-      console.error('Error generating report:', error);
+      toast.error(`Error generating report: ${error}`)
     }
   };
 

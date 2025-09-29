@@ -44,8 +44,8 @@ export const SystemSettingsPage: React.FC = () => {
       const result: PaginatedResponse<SystemSettingWithRelations> = await getSystemSettings(filters, pagination);
       setSettings(result.data);
       setPaginationInfo(result.pagination);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading system settings:', error);
       toast.error('Failed to load system settings');
     } finally {
       setIsLoading(false);

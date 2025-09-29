@@ -132,8 +132,8 @@ export const DeploymentFormDialog: React.FC<DeploymentFormDialogProps> = ({
           deploymentCondition: 'New - Excellent condition'
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading form data:', error);
       toast.error('Failed to load form data');
     }
   };
@@ -167,8 +167,8 @@ export const DeploymentFormDialog: React.FC<DeploymentFormDialogProps> = ({
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

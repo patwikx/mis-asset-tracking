@@ -74,8 +74,8 @@ export const AssetReturnDialog: React.FC<AssetReturnDialogProps> = ({
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error returning asset:', error);
       toast.error('Failed to return asset');
     } finally {
       setIsLoading(false);

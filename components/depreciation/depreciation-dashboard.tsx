@@ -57,8 +57,8 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
       setIsLoading(true);
       const data = await getDepreciationDashboardData(businessUnitId);
       setDashboardData(data);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading depreciation dashboard:', error);
       toast.error('Failed to load depreciation data');
     } finally {
       setIsLoading(false);
@@ -80,8 +80,8 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error in batch calculation:', error);
       toast.error('Failed to process batch depreciation');
     } finally {
       setIsBatchProcessing(false);
@@ -122,8 +122,8 @@ export function DepreciationDashboard({ businessUnitId }: DepreciationDashboardP
           toast.error(result?.message || 'Export failed');
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error exporting report:', error);
       toast.error('Failed to export report');
     } finally {
       setIsExporting(false);

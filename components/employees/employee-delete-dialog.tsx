@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/employees/employee-delete-dialog.tsx
 'use client'
 
@@ -47,7 +48,6 @@ export const EmployeeDeleteDialog: React.FC<EmployeeDeleteDialogProps> = ({
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error deleting employee:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

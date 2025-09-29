@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { AssetStatus } from '@prisma/client';
 import type { AssetFilters } from '@/types/asset-types';
 import { getAssetCategories } from '@/lib/actions/asset-actions';
+import { toast } from 'sonner';
 
 interface AssetFiltersProps {
   filters: AssetFilters;
@@ -65,7 +66,7 @@ export const AssetFiltersComponent: React.FC<AssetFiltersProps> = ({
       const categoriesData = await getAssetCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading filter data:', error);
+      toast.error(`Error loading filter data: ${error}`)
     }
   };
 

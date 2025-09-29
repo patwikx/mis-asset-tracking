@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/depreciation/depreciation-card.tsx
 'use client';
 
@@ -32,7 +33,6 @@ export function DepreciationCard({ asset, onDepreciationCalculated }: Depreciati
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error calculating depreciation:', error);
       toast.error('Failed to calculate depreciation');
     } finally {
       setIsCalculating(false);

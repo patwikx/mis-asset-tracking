@@ -37,8 +37,8 @@ export const SystemSettingDeleteDialog: React.FC<SystemSettingDeleteDialogProps>
       } else {
         toast.error(result.message);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error deleting system setting:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

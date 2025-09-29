@@ -59,8 +59,8 @@ export const CreateDeploymentPage: React.FC = () => {
       setEmployees(employeesResult.data);
       setAvailableAssets(assetsResult.data);
       setTransmittalNumber(nextTransmittalNumber);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error loading data:', error);
       toast.error('Failed to load employees and assets');
     } finally {
       setIsLoadingData(false);
@@ -152,8 +152,8 @@ export const CreateDeploymentPage: React.FC = () => {
       } else {
         toast.error(result.message || 'Failed to create deployments');
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error creating deployments:', error);
       toast.error('Failed to create deployments');
     } finally {
       setIsLoading(false);

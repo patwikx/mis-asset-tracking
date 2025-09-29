@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/categories/categories-page.tsx
 'use client'
 
@@ -46,7 +47,6 @@ export const CategoriesPage: React.FC = () => {
       setCategories(result.data);
       setPaginationInfo(result.pagination);
     } catch (error) {
-      console.error('Error loading categories:', error);
       toast.error('Failed to load categories');
     } finally {
       setIsLoading(false);

@@ -16,6 +16,7 @@ import { Calendar, TrendingDown, Loader as Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getDepreciationSchedule } from '@/lib/actions/depreciation-actions';
 import type { DepreciationScheduleEntry } from '@/types/depreciation-types';
+import { toast } from 'sonner';
 
 interface DepreciationScheduleDialogProps {
   assetId: string;
@@ -40,7 +41,7 @@ export function DepreciationScheduleDialog({
         setSchedule(result.schedule);
       }
     } catch (error) {
-      console.error('Error loading depreciation schedule:', error);
+      toast.error(`Error loading depreciation schedule: ${error}`)
     } finally {
       setIsLoading(false);
     }

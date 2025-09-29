@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/assets/asset-detail-page.tsx
 'use client';
 
@@ -83,7 +84,7 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
       const categoriesData = await getAssetCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading categories:', error);
+      toast.error(`Error loading categories: ${error}`)
     }
   }, []);
 
@@ -157,7 +158,6 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error updating asset:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsSaving(false);
