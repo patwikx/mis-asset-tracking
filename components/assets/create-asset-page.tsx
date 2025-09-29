@@ -515,7 +515,7 @@ export function CreateAssetPage({ businessUnitId }: CreateAssetPageProps) {
                       mode="single"
                       selected={formData.purchaseDate}
                       onSelect={(date: Date | undefined) => updateFormData('purchaseDate', date)}
-                      initialFocus
+                      captionLayout="dropdown"
                     />
                   </PopoverContent>
                 </Popover>
@@ -541,7 +541,7 @@ export function CreateAssetPage({ businessUnitId }: CreateAssetPageProps) {
                       mode="single"
                       selected={formData.warrantyExpiry}
                       onSelect={(date: Date | undefined) => updateFormData('warrantyExpiry', date)}
-                      initialFocus
+                      captionLayout="dropdown"
                     />
                   </PopoverContent>
                 </Popover>

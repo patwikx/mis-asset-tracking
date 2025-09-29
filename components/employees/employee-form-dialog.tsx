@@ -193,7 +193,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Edit Employee' : 'Create New Employee'}
@@ -358,6 +358,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
                     mode="single"
                     selected={formData.hireDate}
                     onSelect={(date: Date | undefined) => updateFormData('hireDate', date)}
+                     captionLayout="dropdown"
                   />
                 </PopoverContent>
               </Popover>

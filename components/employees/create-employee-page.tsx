@@ -252,6 +252,7 @@ export function CreateEmployeePage({ businessUnitId }: CreateEmployeePageProps) 
                       mode="single"
                       selected={formData.hireDate}
                       onSelect={(date: Date | undefined) => updateFormData('hireDate', date)}
+                       captionLayout="dropdown"
                     />
                   </PopoverContent>
                 </Popover>

@@ -511,7 +511,7 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
                       mode="single"
                       selected={formData.purchaseDate}
                       onSelect={(date: Date | undefined) => updateFormData('purchaseDate', date)}
-                      initialFocus
+                       captionLayout="dropdown"
                     />
                   </PopoverContent>
                 </Popover>
