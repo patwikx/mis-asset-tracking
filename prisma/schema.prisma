@@ -169,7 +169,7 @@ model Asset {
   id             String      @id @default(uuid())
   itemCode       String      @unique // Your internal item code
   description    String
-  serialNumber   String?     @unique
+  serialNumber   String?
   modelNumber    String?
   brand          String?
   specifications Json? // Store technical specs as JSON
