@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, User, Building, Shield } from 'lucide-react';
+import { Save, User, Building, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -123,10 +123,6 @@ export function CreateEmployeePage({ businessUnitId }: CreateEmployeePageProps) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Employees
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Create New Employee</h1>
             <p className="text-muted-foreground">Add a new employee to the system</p>

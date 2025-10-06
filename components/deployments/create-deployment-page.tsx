@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Save, User } from 'lucide-react';
+import { Plus, Trash2, Save, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,10 +65,6 @@ export const CreateDeploymentPage: React.FC = () => {
     } finally {
       setIsLoadingData(false);
     }
-  };
-
-  const handleBack = () => {
-    router.push(`/${businessUnitId}/assets/deployments`);
   };
 
   const addDeploymentItem = () => {
@@ -176,15 +172,6 @@ export const CreateDeploymentPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Deployments</span>
-          </Button>
         </div>
         
         <Button
