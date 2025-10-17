@@ -12,11 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Save, X, CreditCard as Edit, Trash2, Calendar as CalendarIcon, Calculator, DollarSign, Package, Building, User, Clock, FileText } from 'lucide-react';
+import { Save, X, CreditCard as Edit, Trash2, Calendar as CalendarIcon, Calculator, DollarSign, Package, Building, User, Clock, FileText, QrCode, Printer, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { AssetStatus, DepreciationMethod } from '@prisma/client';
+import { QRCode } from '@/components/ui/qr-code';
 import { updateAsset, getAssetCategories } from '@/lib/actions/asset-actions';
 import { DepreciationCard } from './depreciation/depreciation-card';
 import { BatchDepreciationDialog } from '../depreciation/batch-depreciation-dialog';
@@ -419,6 +420,107 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
                 <p className="mt-1">{asset.notes || 'No notes available'}</p>
               )}
             </div>
+
+            {/* Financial Information Section */}
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-medium text-muted-foreground mb-4 flex items-center">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Financial Information
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="purchasePrice">Purchase Price</Label>
+                  {isEditing ? (
+                    <Input
+                      id="purchasePrice"
+                      type="number"
+                      step="0.01"
+                      value={formData.purchasePrice}
+                      onChange={(e) => updateFormData('purchasePrice', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  ) : (
+                    <p className="mt-1">
+                      {asset.purchasePrice 
+                        ? `₱${asset.purchasePrice.toLocaleString()}` 
+                        : 'N/A'
+                      }
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Purchase Date</Label>
+                  {isEditing ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.purchaseDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.purchaseDate ? format(formData.purchaseDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.purchaseDate}
+                          onSelect={(date: Date | undefined) => updateFormData('purchaseDate', date)}
+                          captionLayout="dropdown"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <p className="mt-1">
+                      {asset.purchaseDate 
+                        ? format(new Date(asset.purchaseDate), 'PPP')
+                        : 'N/A'
+                      }
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Warranty Expiry</Label>
+                  {isEditing ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.warrantyExpiry && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.warrantyExpiry ? format(formData.warrantyExpiry, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.warrantyExpiry}
+                          onSelect={(date: Date | undefined) => updateFormData('warrantyExpiry', date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <p className="mt-1">
+                      {asset.warrantyExpiry 
+                        ? format(new Date(asset.warrantyExpiry), 'PPP')
+                        : 'N/A'
+                      }
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -454,114 +556,92 @@ export function AssetDetailPage({ asset, businessUnitId }: AssetDetailPageProps)
                   {format(new Date(asset.updatedAt), 'PPP')}
                 </span>
               </div>
+              
+              {/* Barcode Information */}
+              {asset.barcodeValue && (
+                <>
+                  <hr className="my-4" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Barcode Type</span>
+                      <span className="text-sm font-medium">{asset.barcodeType || 'QR_CODE'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Tag Number</span>
+                      <span className="text-sm font-medium font-mono">{asset.tagNumber || 'N/A'}</span>
+                    </div>
+                    {asset.barcodeGenerated && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Barcode Generated</span>
+                        <span className="text-sm font-medium">
+                          {format(new Date(asset.barcodeGenerated), 'PPP')}
+                        </span>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <span className="text-sm text-muted-foreground">Barcode Value</span>
+                      <div className="flex items-center space-x-2">
+                        <code className="flex-1 px-2 py-1 bg-muted rounded text-xs font-mono break-all">
+                          {asset.barcodeValue}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(asset.barcodeValue || '');
+                            toast.success('Barcode copied to clipboard');
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* QR Code Display */}
+                    <div className="flex justify-center pt-2">
+                      <QRCode value={asset.barcodeValue} size={96} className="mx-auto" />
+                    </div>
+                    
+                    <div className="flex space-x-2 pt-2">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Printer className="h-3 w-3 mr-2" />
+                        Print
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.open(`/${businessUnitId}/assets/barcodes`, '_blank')}
+                      >
+                        <QrCode className="h-3 w-3 mr-2" />
+                        Manage
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {/* No Barcode Message */}
+              {!asset.barcodeValue && (
+                <>
+                  <hr className="my-4" />
+                  <div className="text-center py-4">
+                    <QrCode className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm text-muted-foreground mb-3">No barcode generated</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open(`/${businessUnitId}/assets/barcodes`, '_blank')}
+                    >
+                      <QrCode className="h-3 w-3 mr-2" />
+                      Generate Barcode
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Financial Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <DollarSign className="h-5 w-5 mr-2" />
-            Financial Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="purchasePrice">Purchase Price</Label>
-              {isEditing ? (
-                <Input
-                  id="purchasePrice"
-                  type="number"
-                  step="0.01"
-                  value={formData.purchasePrice}
-                  onChange={(e) => updateFormData('purchasePrice', e.target.value)}
-                  placeholder="0.00"
-                />
-              ) : (
-                <p className="mt-1">
-                  {asset.purchasePrice 
-                    ? `₱ ${asset.purchasePrice.toLocaleString()}` 
-                    : 'N/A'
-                  }
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Purchase Date</Label>
-              {isEditing ? (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.purchaseDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.purchaseDate ? format(formData.purchaseDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.purchaseDate}
-                      onSelect={(date: Date | undefined) => updateFormData('purchaseDate', date)}
-                       captionLayout="dropdown"
-                    />
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <p className="mt-1">
-                  {asset.purchaseDate 
-                    ? format(new Date(asset.purchaseDate), 'PPP')
-                    : 'N/A'
-                  }
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Warranty Expiry</Label>
-              {isEditing ? (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.warrantyExpiry && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.warrantyExpiry ? format(formData.warrantyExpiry, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.warrantyExpiry}
-                      onSelect={(date: Date | undefined) => updateFormData('warrantyExpiry', date)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <p className="mt-1">
-                  {asset.warrantyExpiry 
-                    ? format(new Date(asset.warrantyExpiry), 'PPP')
-                    : 'N/A'
-                  }
-                </p>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Depreciation Configuration */}
       <Card>

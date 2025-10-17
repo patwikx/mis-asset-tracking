@@ -3,16 +3,20 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Download, ListFilter as Filter } from "lucide-react";
+import { Plus, RefreshCw, Download, ListFilter as Filter, Upload, Settings } from "lucide-react";
 
 interface AssetsHeaderProps {
   title: string;
   description: string;
   onCreateNew: () => void;
+  onBulkCreate?: () => void;
+  onBulkOperations?: () => void;
   onRefresh: () => void;
   onExport?: () => void;
   onFilter?: () => void;
   showCreateButton?: boolean;
+  showBulkCreateButton?: boolean;
+  showBulkOperationsButton?: boolean;
   showFilterButton?: boolean;
 }
 
@@ -20,10 +24,14 @@ export const AssetsHeader: React.FC<AssetsHeaderProps> = ({
   title,
   description,
   onCreateNew,
+  onBulkCreate,
+  onBulkOperations,
   onRefresh,
   onExport,
   onFilter,
   showCreateButton = true,
+  showBulkCreateButton = true,
+  showBulkOperationsButton = true,
   showFilterButton = true
 }) => {
   return (
@@ -71,12 +79,28 @@ export const AssetsHeader: React.FC<AssetsHeaderProps> = ({
           </Button>
         </div>
 
-        {showCreateButton && (
-          <Button onClick={onCreateNew}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New
-          </Button>
-        )}
+        <div className="flex items-center space-x-2">
+          {showBulkOperationsButton && onBulkOperations && (
+            <Button variant="outline" onClick={onBulkOperations}>
+              <Settings className="w-4 h-4 mr-2" />
+              Bulk Operations
+            </Button>
+          )}
+
+          {showBulkCreateButton && onBulkCreate && (
+            <Button variant="outline" onClick={onBulkCreate}>
+              <Upload className="w-4 h-4 mr-2" />
+              Bulk Create
+            </Button>
+          )}
+          
+          {showCreateButton && (
+            <Button onClick={onCreateNew}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

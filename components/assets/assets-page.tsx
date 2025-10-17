@@ -59,6 +59,16 @@ export const AssetsPage: React.FC = () => {
     router.push(`/${businessUnitId}/assets/create`);
   };
 
+  const handleBulkCreate = () => {
+    router.push(`/${businessUnitId}/assets/bulk-create`);
+  };
+
+  const handleBulkOperations = () => {
+    router.push(`/${businessUnitId}/assets/bulk-operations`);
+  };
+
+
+
   const handleView = (asset: AssetWithRelations) => {
     router.push(`/${businessUnitId}/assets/${asset.id}`);
   };
@@ -105,6 +115,8 @@ export const AssetsPage: React.FC = () => {
         title="Assets"
         description="Manage your organization's assets and equipment"
         onCreateNew={handleCreateNew}
+        onBulkCreate={handleBulkCreate}
+        onBulkOperations={handleBulkOperations}
         onRefresh={handleRefresh}
         onExport={handleExport}
         showFilterButton={false} // Filter is handled by the AssetFiltersComponent

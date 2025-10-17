@@ -55,6 +55,26 @@ const getNavigationItems = (businessUnitId: string, userRole: string) => {
           url: `/${businessUnitId}/assets/deployments`,
         },
         {
+          title: "Transfers",
+          url: `/${businessUnitId}/assets/transfers`,
+        },
+        {
+          title: "Utilization",
+          url: `/${businessUnitId}/assets/utilization`,
+        },
+        {
+          title: "Retirements",
+          url: `/${businessUnitId}/assets/retirements`,
+        },
+                {
+          title: "Disposals",
+          url: `/${businessUnitId}/assets/disposals`,
+        },
+        {
+          title: "Barcodes",
+          url: `/${businessUnitId}/assets/barcodes`,
+        },
+        {
           title: "Categories",
           url: `/${businessUnitId}/assets/categories`,
         },

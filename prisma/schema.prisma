@@ -18,12 +18,19 @@ model BusinessUnit {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  departments    Department[]
-  employees      Employee[]
-  assets         Asset[]
-  deployments    AssetDeployment[]
-  assetHistories AssetHistory[]
-  depreciations  AssetDepreciation[]
+  departments           Department[]
+  employees             Employee[]
+  assets                Asset[]
+  deployments           AssetDeployment[]
+  assetHistories        AssetHistory[]
+  depreciations         AssetDepreciation[]
+  assetDisposals        AssetDisposal[]
+  transfersFrom         AssetTransfer[]         @relation("TransferFromBusinessUnit")
+  transfersTo           AssetTransfer[]         @relation("TransferToBusinessUnit")
+  retirements           AssetRetirement[]
+  BarcodeScanLog        BarcodeScanLog[]
+  InventoryVerification InventoryVerification[]
+  BarcodeSettings       BarcodeSettings?
 
   @@map("business_units")
 }
@@ -101,12 +108,31 @@ model Employee {
   createdAssets       Asset[]           @relation("AssetCreator")
   assetHistories      AssetHistory[]    @relation("HistoryEmployee")
 
+  // Disposal relations
+  createdDisposals  AssetDisposal[] @relation("AssetDisposalCreator")
+  approvedDisposals AssetDisposal[] @relation("AssetDisposalApprover")
+
+  // Transfer relations
+  requestedTransfers  AssetTransfer[] @relation("TransferRequestedBy")
+  approvedTransfers   AssetTransfer[] @relation("TransferApprovedBy")
+  rejectedTransfers   AssetTransfer[] @relation("TransferRejectedBy")
+  handedOverTransfers AssetTransfer[] @relation("TransferHandedOverBy")
+  receivedTransfers   AssetTransfer[] @relation("TransferReceivedBy")
+  createdTransfers    AssetTransfer[] @relation("TransferCreatedBy")
+
+  // Retirement relations
+  approvedRetirements AssetRetirement[] @relation("RetirementApprovedBy")
+  createdRetirements  AssetRetirement[] @relation("RetirementCreatedBy")
+
   // Auth sessions
   sessions Session[]
   accounts Account[]
 
   // Audit logs
   auditLogs AuditLog[] @relation("AuditLogEmployee")
+
+  // Barcode relations
+  createdVerifications InventoryVerification[] @relation("VerificationCreator")
 
   @@map("employees")
 }
@@ -144,6 +170,7 @@ enum AssetStatus {
   LOST
   DAMAGED
   FULLY_DEPRECIATED // New status when asset is fully depreciated
+  DISPOSED // Asset has been disposed
 }
 
 // Asset History Actions
@@ -162,6 +189,21 @@ enum AssetHistoryAction {
   LOCATION_CHANGED
   UPDATED
   DEPRECIATION_CALCULATED // New action for depreciation calculations
+  DISPOSED // Asset disposal action
+}
+
+// Asset Disposal Reasons
+enum AssetDisposalReason {
+  SOLD
+  DONATED
+  SCRAPPED
+  LOST
+  STOLEN
+  TRANSFERRED
+  END_OF_LIFE
+  DAMAGED_BEYOND_REPAIR
+  OBSOLETE
+  REGULATORY_COMPLIANCE
 }
 
 // Main Assets Table
@@ -214,6 +256,12 @@ model Asset {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Barcode/QR Code fields
+  barcodeValue     String?   @unique // The actual barcode/QR code value
+  barcodeType      String? // QR_CODE, CODE_128, CODE_39, EAN_13
+  barcodeGenerated DateTime? // When the barcode was generated
+  tagNumber        String?   @unique // Physical tag number
+
   // Current assignment info (denormalized for quick access)
   currentlyAssignedTo String? // Current employee ID if deployed
   currentDeploymentId String? // Current deployment ID if deployed
@@ -227,6 +275,12 @@ model Asset {
   assetHistories      AssetHistory[]
   maintenanceRecords  AssetMaintenance[]
   depreciationHistory AssetDepreciation[] // Track depreciation over time
+  disposal            AssetDisposal? // Asset disposal record
+  transfers           AssetTransfer[] // Asset transfer records
+  retirement          AssetRetirement? // Asset retirement record
+  replacementFor      AssetRetirement[]   @relation("ReplacementAsset") // Assets this replaces
+  scanLogs            BarcodeScanLog[] // Barcode scan history
+  verificationItems   VerificationItem[]
 
   @@index([nextDepreciationDate]) // For batch depreciation processing
   @@index([isFullyDepreciated, status]) // For filtering depreciated assets
@@ -280,6 +334,148 @@ model AssetDepreciation {
   @@index([depreciationDate]) // For period-based queries
   @@index([businessUnitId, depreciationDate]) // For business unit reporting
   @@map("asset_depreciations")
+}
+
+// Asset Disposal - Track asset disposal and end-of-life management
+model AssetDisposal {
+  id             String @id @default(uuid())
+  assetId        String @unique // One disposal per asset
+  businessUnitId String
+
+  // Disposal Information
+  disposalDate     DateTime
+  reason           AssetDisposalReason
+  disposalMethod   String? // How it was disposed (auction, recycling, etc.)
+  disposalLocation String? // Where it was disposed
+
+  // Financial Information
+  disposalValue    Decimal? @db.Decimal(12, 2) // Amount received from disposal
+  disposalCost     Decimal? @db.Decimal(12, 2) // Cost of disposal process
+  netDisposalValue Decimal? @db.Decimal(12, 2) // Net value (disposalValue - disposalCost)
+
+  // Book Value at Disposal
+  bookValueAtDisposal Decimal  @db.Decimal(12, 2) // Asset book value when disposed
+  gainLoss            Decimal? @db.Decimal(12, 2) // Gain/Loss on disposal
+
+  // Approval and Documentation
+  approvedBy        String? // Employee ID who approved disposal
+  approvedAt        DateTime?
+  documentationUrl  String? // Link to disposal documentation/certificates
+  certificateNumber String? // Disposal certificate number
+
+  // Recipient Information (for transfers/donations)
+  recipientName    String?
+  recipientContact String?
+  recipientAddress String?
+
+  // Environmental/Compliance
+  environmentalCompliance Boolean @default(false) // Meets environmental standards
+  dataWiped               Boolean @default(false) // Data securely wiped (for IT assets)
+  complianceNotes         String? // Compliance and regulatory notes
+
+  // Additional Information
+  condition         String? // Asset condition at disposal
+  notes             String? // Additional disposal notes
+  internalReference String? // Internal tracking reference
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  asset              Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  businessUnit       BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  createdByEmployee  Employee     @relation("AssetDisposalCreator", fields: [createdBy], references: [id])
+  approvedByEmployee Employee?    @relation("AssetDisposalApprover", fields: [approvedBy], references: [id])
+
+  @@index([disposalDate]) // For disposal date queries
+  @@index([reason]) // For disposal reason analysis
+  @@index([businessUnitId, disposalDate]) // For business unit reporting
+  @@index([approvedBy, approvedAt]) // For approval tracking
+  @@map("asset_disposals")
+}
+
+// Asset Transfer Status
+enum AssetTransferStatus {
+  PENDING_APPROVAL
+  APPROVED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+// Asset Transfer - Track inter-business unit transfers
+model AssetTransfer {
+  id             String @id @default(uuid())
+  assetId        String
+  transferNumber String @unique // Auto-generated transfer number
+
+  // Source and Destination
+  fromBusinessUnitId String
+  toBusinessUnitId   String
+  fromLocation       String?
+  toLocation         String?
+
+  // Transfer Information
+  transferDate  DateTime
+  requestedDate DateTime            @default(now())
+  completedDate DateTime?
+  status        AssetTransferStatus @default(PENDING_APPROVAL)
+
+  // Transfer Details
+  reason           String // Reason for transfer
+  transferMethod   String? // How asset will be transferred (courier, pickup, etc.)
+  trackingNumber   String? // Shipping/tracking number
+  estimatedArrival DateTime? // Expected arrival date
+
+  // Approval Workflow
+  requestedBy     String // Employee who requested transfer
+  approvedBy      String? // Employee who approved transfer
+  approvedAt      DateTime?
+  rejectedBy      String? // Employee who rejected transfer
+  rejectedAt      DateTime?
+  rejectionReason String? // Reason for rejection
+
+  // Condition and Documentation
+  conditionBefore  String? // Asset condition before transfer
+  conditionAfter   String? // Asset condition after transfer
+  transferNotes    String? // Additional transfer notes
+  documentationUrl String? // Link to transfer documentation
+
+  // Financial Information
+  transferCost   Decimal? @db.Decimal(10, 2) // Cost of transfer
+  insuranceValue Decimal? @db.Decimal(12, 2) // Insurance value during transfer
+
+  // Handover Information
+  handedOverBy String? // Employee who handed over the asset
+  handedOverAt DateTime? // When asset was handed over
+  receivedBy   String? // Employee who received the asset
+  receivedAt   DateTime? // When asset was received
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  asset                Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  fromBusinessUnit     BusinessUnit @relation("TransferFromBusinessUnit", fields: [fromBusinessUnitId], references: [id])
+  toBusinessUnit       BusinessUnit @relation("TransferToBusinessUnit", fields: [toBusinessUnitId], references: [id])
+  requestedByEmployee  Employee     @relation("TransferRequestedBy", fields: [requestedBy], references: [id])
+  approvedByEmployee   Employee?    @relation("TransferApprovedBy", fields: [approvedBy], references: [id])
+  rejectedByEmployee   Employee?    @relation("TransferRejectedBy", fields: [rejectedBy], references: [id])
+  handedOverByEmployee Employee?    @relation("TransferHandedOverBy", fields: [handedOverBy], references: [id])
+  receivedByEmployee   Employee?    @relation("TransferReceivedBy", fields: [receivedBy], references: [id])
+  createdByEmployee    Employee     @relation("TransferCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([transferDate]) // For transfer date queries
+  @@index([status]) // For status-based queries
+  @@index([fromBusinessUnitId, toBusinessUnitId]) // For business unit transfer queries
+  @@index([approvedBy, approvedAt]) // For approval tracking
+  @@index([transferNumber]) // For transfer number lookup
+  @@map("asset_transfers")
 }
 
 // Asset Deployment Status
@@ -503,4 +699,171 @@ model Notification {
   createdAt   DateTime @default(now())
 
   @@map("notifications")
+}
+
+// Asset Retirement Reasons
+enum AssetRetirementReason {
+  END_OF_USEFUL_LIFE
+  FULLY_DEPRECIATED
+  OBSOLETE
+  DAMAGED_BEYOND_REPAIR
+  POLICY_CHANGE
+  UPGRADE_REPLACEMENT
+}
+
+// Asset Retirement - Track asset retirement workflow
+model AssetRetirement {
+  id                 String                @id @default(uuid())
+  assetId            String                @unique
+  businessUnitId     String
+  retirementDate     DateTime
+  reason             AssetRetirementReason
+  retirementMethod   String? // How it was retired (internal process, etc.)
+  condition          String? // Final condition assessment
+  notes              String? // Retirement notes
+  replacementAssetId String? // If replaced by another asset
+  disposalPlanned    Boolean               @default(false)
+  disposalDate       DateTime? // Planned disposal date
+
+  // Approval Workflow
+  approvedBy String? // Employee who approved retirement
+  approvedAt DateTime?
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  asset              Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  businessUnit       BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  replacementAsset   Asset?       @relation("ReplacementAsset", fields: [replacementAssetId], references: [id])
+  approvedByEmployee Employee?    @relation("RetirementApprovedBy", fields: [approvedBy], references: [id])
+  createdByEmployee  Employee     @relation("RetirementCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([retirementDate]) // For retirement date queries
+  @@index([reason]) // For reason-based queries
+  @@index([businessUnitId]) // For business unit queries
+  @@index([approvedBy, approvedAt]) // For approval tracking
+  @@map("asset_retirements")
+}
+
+// Barcode Types
+enum BarcodeType {
+  QR_CODE
+  CODE_128
+  CODE_39
+  EAN_13
+}
+
+// Barcode Scan Logs - Track all barcode scans
+model BarcodeScanLog {
+  id             String   @id @default(uuid())
+  assetId        String
+  scannedValue   String
+  scannedBy      String
+  scannedAt      DateTime @default(now())
+  businessUnitId String
+  location       String?
+  notes          String?
+
+  // Relations
+  asset        Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+
+  @@index([scannedAt]) // For chronological queries
+  @@index([scannedBy]) // For user-based queries
+  @@index([businessUnitId]) // For business unit queries
+  @@map("barcode_scan_logs")
+}
+
+// Inventory Verification Status
+enum VerificationStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Verification Item Status
+enum VerificationItemStatus {
+  PENDING
+  VERIFIED
+  DISCREPANCY
+  NOT_FOUND
+}
+
+// Inventory Verification - Manage inventory verification processes
+model InventoryVerification {
+  id               String             @id @default(uuid())
+  businessUnitId   String
+  verificationName String
+  description      String?
+  startDate        DateTime
+  endDate          DateTime?
+  status           VerificationStatus @default(PLANNED)
+  totalAssets      Int                @default(0)
+  scannedAssets    Int                @default(0)
+  verifiedAssets   Int                @default(0)
+  discrepancies    Int                @default(0)
+  createdBy        String
+  assignedTo       String[] // Array of employee IDs
+  locations        String[] // Array of location names
+  categories       String[] // Array of category names
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  businessUnit      BusinessUnit       @relation(fields: [businessUnitId], references: [id])
+  createdByEmployee Employee           @relation("VerificationCreator", fields: [createdBy], references: [id])
+  verificationItems VerificationItem[]
+
+  @@index([businessUnitId]) // For business unit queries
+  @@index([status]) // For status-based queries
+  @@index([startDate, endDate]) // For date range queries
+  @@map("inventory_verifications")
+}
+
+// Verification Items - Individual asset verification records
+model VerificationItem {
+  id               String                 @id @default(uuid())
+  verificationId   String
+  assetId          String
+  expectedLocation String
+  actualLocation   String?
+  expectedAssignee String?
+  actualAssignee   String?
+  scannedAt        DateTime?
+  scannedBy        String?
+  status           VerificationItemStatus @default(PENDING)
+  notes            String?
+  photos           String[] // Array of photo URLs
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  // Relations
+  verification InventoryVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  asset        Asset                 @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([verificationId]) // For verification queries
+  @@index([assetId]) // For asset queries
+  @@index([status]) // For status-based queries
+  @@map("verification_items")
+}
+
+// Barcode Settings - Business unit specific barcode configuration
+model BarcodeSettings {
+  id                          String      @id @default(uuid())
+  businessUnitId              String      @unique
+  defaultBarcodeType          BarcodeType @default(QR_CODE)
+  includeCompanyLogo          Boolean     @default(false)
+  autoGenerateOnAssetCreation Boolean     @default(false)
+  barcodePrefix               String      @default("AST")
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
+
+  // Relations
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+
+  @@map("barcode_settings")
 }
